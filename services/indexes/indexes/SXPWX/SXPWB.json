@@ -1,0 +1,44 @@
+{
+    "ticker": "SXPWB",
+    "name": "Bread Basket Index",
+    "description": "",
+    "base_value": 100,
+    "current_value": 100,
+    "divisor": 100,
+    "weighting_method": "power_norm_marketcap",
+    "rebalancing_frequency": "quarterly",
+    "components": [
+        {
+            "symbol": "DE",
+            "weight": 0
+        },
+        {
+            "symbol": "CTVA",
+            "weight": 0
+        },
+        {
+            "symbol": "ADM",
+            "weight": 0
+        },
+        {
+            "symbol": "CF",
+            "weight": 0
+        },
+        {
+            "symbol": "MOS",
+            "weight": 0
+        },
+        {
+            "symbol": "INGR",
+            "weight": 0
+        },
+        {
+            "symbol": "GPRE",
+            "weight": 0
+        },
+        {
+            "symbol": "FMC",
+            "weight": 0
+        }
+    ]
+}   

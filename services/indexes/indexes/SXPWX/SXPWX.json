@@ -1,0 +1,52 @@
+{
+    "ticker": "SXPWX",
+    "name": "US Strategic Power Index",
+    "description": "",
+    "base_value": 1000,
+    "current_value": 1000,
+    "divisor": 1000,
+    "weighting_method": "equal",
+    "rebalancing_frequency": "quarterly",
+    "components": [
+        {
+            "symbol": "SXPWB",
+            "weight": 0.1
+        },
+        {
+            "symbol": "SXPWR",
+            "weight": 0.1
+        },
+        {
+            "symbol": "SXPWA",
+            "weight": 0.1
+        },
+        {
+            "symbol": "SXPWS",
+            "weight": 0.1
+        },
+        {
+            "symbol": "SXPWD",
+            "weight": 0.1
+        },
+        {
+            "symbol": "SXPWE",
+            "weight": 0.1
+        },  
+        {
+            "symbol": "SXPWC",
+            "weight": 0.1
+        },
+        {
+            "symbol": "SXPWI",
+            "weight": 0.1
+        },
+        {
+            "symbol": "SXPWO",
+            "weight": 0.1
+        },
+        {
+            "symbol": "SXPWL",
+            "weight": 0.1
+        }
+    ]
+}   

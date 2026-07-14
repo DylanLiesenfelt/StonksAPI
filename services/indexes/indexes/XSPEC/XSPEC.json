@@ -1,0 +1,73 @@
+{
+    "ticker": "XSPEC",
+    "name": "Xtreme Speculative Index",
+    "description": "The Xtreme Speculative Index (XSPEC) is a custom stock index that tracks the performance of highly speculative and volatile stocks. It is designed to provide investors with insights into the behavior of stocks that are often characterized by rapid price movements, high risk, and potential for significant gains or losses.",
+    "base_value": 100,
+    "current_value": 100,
+    "divisor": 100,
+    "weighting_method": "power_normalized_marketcap",
+    "alpha": 0.5,
+    "rebalancing_frequency": "monthly",
+    "components": [
+        {
+            "symbol": "WOLF",
+            "market_cap": 0,
+            "normalized": 0,
+            "weight": 0
+        },
+        {
+            "symbol": "RCAT",
+            "market_cap": 0,
+            "normalized": 0,
+            "weight": 0
+        },
+        {
+            "symbol": "ONDS",
+            "market_cap": 0,
+            "normalized": 0,
+            "weight": 0
+        },
+        {
+            "symbol": "USAR",
+            "market_cap": 0,
+            "normalized": 0,
+            "weight": 0
+        },
+        {
+            "symbol": "NNE",
+            "market_cap": 0,
+            "normalized": 0,
+            "weight": 0
+        },
+        {
+            "symbol": "ABSI",
+            "market_cap": 0,
+            "normalized": 0,
+            "weight": 0
+        },  
+        {
+            "symbol": "AMPX",
+            "market_cap": 0,
+            "normalized": 0,
+            "weight": 0
+        },
+        {
+            "symbol": "KTOS",
+            "market_cap": 0,
+            "normalized": 0,
+            "weight": 0
+        },
+        {
+            "symbol": "TMC",
+            "market_cap": 0,
+            "normalized": 0,
+            "weight": 0
+        },
+        {
+            "symbol": "VELO",
+            "market_cap": 0,
+            "normalized": 0,
+            "weight": 0
+        }
+    ]
+}   

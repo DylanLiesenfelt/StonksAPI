@@ -1,0 +1,76 @@
+{
+    "ticker": "SXPWR",
+    "name": "ISR - Index",
+    "description": "",
+    "base_value": 100,
+    "current_value": 100,
+    "divisor": 100,
+    "weighting_method": "power_norm_marketcap",
+    "rebalancing_frequency": "quarterly",
+    "components": [
+        {
+            "symbol": "LHX",
+            "weight": 0
+        },
+        {
+            "symbol": "PLTR",
+            "weight": 0
+        },
+        {
+            "symbol": "BBAI",
+            "weight": 0
+        },
+        {
+            "symbol": "LDOS",
+            "weight": 0
+        },
+        {
+            "symbol": "BAH",
+            "weight": 0
+        },
+        {
+            "symbol": "KTOS",
+            "weight": 0
+        },
+        {
+            "symbol": "AI",
+            "weight": 0
+        },
+        {
+            "symbol": "CACI",
+            "weight": 0
+        },
+        {
+            "symbol": "SAIC",
+            "weight": 0
+        },
+        {
+            "symbol": "AXON",
+            "weight": 0
+        },
+        {
+            "symbol": "PL",
+            "weight": 0
+        },
+        {
+            "symbol": "SPIR",
+            "weight": 0
+        },
+        {
+            "symbol": "IRDM",
+            "weight": 0
+        },
+        {
+            "symbol": "BKSY",
+            "weight": 0
+        },
+        {
+            "symbol": "RCAT",
+            "weight": 0
+        },
+        {
+            "symbol": "ASTS",
+            "weight": 0
+        }
+    ]
+}   
