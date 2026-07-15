@@ -13,7 +13,7 @@ class QuotesProvider:
         if not tickers:
             return result
 
-        url = self.base + "order=asc&limit=250&sort=ticker&ticker.any_of=" + "%2C".join(tickers) + self.api_key
+        url = self.base + "order=asc&limit=250&sort=ticker&ticker.any_of=" + "%2C".join(t.upper() for t in tickers) + self.api_key
         data = await self.client.fetch(url)
 
         for item in data["results"]:
