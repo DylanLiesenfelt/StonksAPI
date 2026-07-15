@@ -25,13 +25,13 @@ Data provider service, the backbone of all other features. Collects and provides
 
 - `/marketdata/historical?tickers={tickers}&start={start}&end={end}` - Retrieve historical stock price data for a list of symbols over a defined time range.
 
-- `/marketdata/marketstatus` - Check the current status of the stock market (open, pre-market, after-hours). As well next trading day, upcomming holidays,  last trading day of the week, and month.
+- `/marketdata/market_status` - Check the current status of the stock market (open, pre-market, after-hours). As well next trading day, upcomming holidays,  last trading day of the week, and month.
 
 - `/marketdata/news` - Get the latest market news and headlines from various sources. 
 
 - `/marketdata/news?tickers={tickers}` - Get the latest market news and headlines for a list of symbols.
 
-- `/marketdata/tickerinfo?tickers={tickers}` - Retrieve relevant information for a list of stock tickers. As well as a list of related tickers.
+- `/marketdata/ticker_info?tickers={tickers}` - Retrieve relevant information for a list of stock tickers. As well as a list of related tickers.
 
 ### Custom Indexes
 A service that builds, maintains, and provides data related to custom stock indexes. 
