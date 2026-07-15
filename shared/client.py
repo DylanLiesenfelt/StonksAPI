@@ -1,5 +1,7 @@
 import httpx, asyncio
 
+from shared.config import MASSIVE_KEY
+
 class Client:
     def __init__(self):
         self._client = httpx.AsyncClient(timeout=3)
@@ -11,7 +13,9 @@ class Client:
                 r.raise_for_status()
                 result = r.json()
                 if "next_url" in result:
-                    fetched = await self.fetch(result["next_url"])
+                    # Polygon's next_url omits the key; the initial request appended it, so continuation must too
+                    next_url = result["next_url"] + "&apiKey=" + MASSIVE_KEY
+                    fetched = await self.fetch(next_url)
                     if fetched:
                         result["results"] += fetched["results"]
                 return result

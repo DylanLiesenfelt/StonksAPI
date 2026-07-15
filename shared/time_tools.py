@@ -39,10 +39,20 @@ def get_current_date() -> str:
 def get_current_datetime() -> str:
     return datetime.now(ZoneInfo(TZ)).strftime("%m-%d-%Y %H:%M:%S")
 
+def get_default_startdate() -> str:
+    return datetime(2026, 1, 2, 9, 30, 0, tzinfo=ZoneInfo(TZ)).strftime("%m-%d-%Y %H:%M:%S")
+
 # Conversions
 # =================================================================
 def convert_to_ms(date_str: str) -> int:
     dt = parse(date_str)
+    return int(dt.timestamp() * 1000)
+
+def convert_date_to_ms(date_str: str, end_of_day: bool = False) -> int:
+    "date_str is MM-DD-YYYY with no time component; treated as midnight ET, or 23:59:59 ET if end_of_day"
+    dt = datetime.strptime(date_str, "%m-%d-%Y").replace(tzinfo=ZoneInfo(TZ))
+    if end_of_day:
+        dt = dt.replace(hour=23, minute=59, second=59)
     return int(dt.timestamp() * 1000)
 
 def convert_from_ms(ms: int) -> str:
