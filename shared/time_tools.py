@@ -48,6 +48,15 @@ def convert_to_ms(date_str: str) -> int:
     dt = parse(date_str)
     return int(dt.timestamp() * 1000)
 
+def convert_to_iso_date(date: str | int) -> str:
+    "Converts an internal date (MM-DD-YYYY[ HH:MM:SS] string, or epoch ms int) to YYYY-MM-DD for external APIs expecting ISO 8601 dates"
+    if isinstance(date, int):
+        dt = datetime.fromtimestamp(date / 1000, tz=ZoneInfo(TZ))
+    else:
+        fmt = "%m-%d-%Y %H:%M:%S" if " " in date else "%m-%d-%Y"
+        dt = datetime.strptime(date, fmt)
+    return dt.strftime("%Y-%m-%d")
+
 def convert_date_to_ms(date_str: str, end_of_day: bool = False) -> int:
     "date_str is MM-DD-YYYY with no time component; treated as midnight ET, or 23:59:59 ET if end_of_day"
     dt = datetime.strptime(date_str, "%m-%d-%Y").replace(tzinfo=ZoneInfo(TZ))
