@@ -2,8 +2,11 @@ from fastapi import APIRouter, Depends, Query, Request
 
 from shared.client import Client
 from services.stonksAPI.v1.market_data.ticker_info.provider import TickerInfoProvider
-from services.stonksAPI.v1.market_data.ticker_info.schema import TickerInfoResponse
 from services.stonksAPI.v1.market_data.ticker_info.service import TickerInfoService
+
+from services.stonksAPI.v1.market_data.ticker_info.schema import TickerInfoResponse
+from services.stonksAPI.v1.market_data.ticker_info.schema import RelatedResponse
+
 
 router = APIRouter(prefix="/tickerinfo", tags=["ticker info"])
 
@@ -27,3 +30,11 @@ async def get_tickerinfo(
     service: TickerInfoService = Depends(get_service),
 ):
     return await service.get_tickerinfo(ticker, date)
+
+@router.get("/related", response_model=RelatedResponse)
+async def get_related(
+    ticker: str,
+    service: TickerInfoService = Depends(get_service)
+):
+    get_related
+    return await service.get_related(ticker)

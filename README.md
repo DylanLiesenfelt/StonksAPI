@@ -21,17 +21,19 @@ Data provider service, the backbone of all other features. Collects and provides
 ** To be implemented in v0.1.0 **
 
 #### Endpoints
-- `/marketdata/quotes?{tickers}` - Get real-time stock quotes for a list of symbols.
+- `/marketdata/quotes?{tickers}` - Get real-time stock quotes for a list of symbols. ✅
 
-- `/marketdata/historical?tickers={tickers}&start={start}&end={end}` - Retrieve historical stock price data for a list of symbols over a defined time range.
+- `/marketdata/historical?tickers={tickers}&start={start}&end={end}` - Retrieve historical stock price data for a list of symbols over a defined time range. ✅
 
-- `/marketdata/market_status` - Check the current status of the stock market (open, pre-market, after-hours). As well next trading day, upcomming holidays,  last trading day of the week, and month.
+- `/marketdata/market_status` - Check the current status of the stock market (open, pre-market, after-hours). As well next trading day, upcomming holidays,  last trading day of the week, and month. ✅
 
 - `/marketdata/news` - Get the latest market news and headlines from various sources. 
 
-- `/marketdata/news?tickers={tickers}` - Get the latest market news and headlines for a list of symbols.
+- `/marketdata/news?tickers={tickers}` - Get the latest market news and headlines for a list of symbols. 
 
-- `/marketdata/ticker_info?tickers={tickers}` - Retrieve relevant information for a list of stock tickers. As well as a list of related tickers.
+- `/marketdata/tickerinfo?ticker={ticker}&date={date}` - Retrieve relevant information for an individual stock ticker on a specific date or current date. ✅
+
+- `/marketdata/tickerinfo/related?ticker={ticker}` - Retrieve a list of related stock tickers ✅
 
 ### Custom Indexes
 A service that builds, maintains, and provides data related to custom stock indexes. 

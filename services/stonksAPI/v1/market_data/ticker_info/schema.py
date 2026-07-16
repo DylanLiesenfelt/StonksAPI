@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-
 class TickerInfoResponse(BaseModel):
     ticker    : str
     name      : str
@@ -10,3 +9,6 @@ class TickerInfoResponse(BaseModel):
     hq_state  : str
     logo      : str
     icon      : str
+
+class RelatedResponse(BaseModel):
+    tickers : list[str] | str

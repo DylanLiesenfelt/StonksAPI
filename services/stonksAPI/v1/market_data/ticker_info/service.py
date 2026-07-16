@@ -6,12 +6,18 @@ class TickerInfoService:
         self.provider = provider
 
     async def get_tickerinfo(
-            self,
-            ticker: str,
-            date: str|int|None = None
-        ):
+        self,
+        ticker: str,
+        date: str|int|None = None
+    ):
 
         if date:
             date = convert_to_iso_date(date)
 
         return await self.provider.get_tickerinfo(ticker, date)
+    
+    async def get_related(
+        self,
+        ticker: str,
+    ):
+        return await self.provider.get_related(ticker)

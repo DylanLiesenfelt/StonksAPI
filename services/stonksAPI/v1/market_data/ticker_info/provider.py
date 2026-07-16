@@ -4,13 +4,13 @@ class TickerInfoProvider:
     def __init__(self, client):
         self.client = client
         self.api_key = "apiKey=" + MASSIVE_KEY
-        self.base = "https://api.massive.com/v3/reference/tickers/"
+        self.base = "https://api.massive.com/"
 
 
     async def get_tickerinfo(self, ticker: str, date: str|int|None):
         ticker = ticker.upper()
         if date:
-            url = self.base + f"{ticker}?date={date}&" + self.api_key
+            url = self.base + "v3/reference/tickers/" + f"{ticker}?date={date}&" + self.api_key
         else: 
             url = self.base + f"{ticker}?" + self.api_key
         data = await self.client.fetch(url)
@@ -27,3 +27,24 @@ class TickerInfoProvider:
         }
             
         return result
+    
+    async def get_related(self, ticker):
+        ticker = ticker.upper()
+        url = self.base + f"v1/related-companies/{ticker}?" + self.api_key 
+
+        data = await self.client.fetch(url)
+        tickers = []
+
+        if "results" in data:
+            data = data["results"]
+
+            for t in data:
+                tickers.append(t["ticker"])
+
+        else:
+            tickers.append("No Related Tickers")
+
+        return {
+            "tickers" : tickers
+        }
+
