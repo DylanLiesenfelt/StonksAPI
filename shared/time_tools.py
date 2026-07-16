@@ -14,12 +14,7 @@ TZ = "America/New_York"
 
 
 def nyse_holidays(start_year: int, end_year: int) -> holidays.HolidayBase:
-    """
-    Freshly builds an NYSE holiday calendar covering [start_year, end_year].
-    Built (never cached) on every call with explicit years so callers always
-    get a fully populated range, instead of relying on holidays' per-year
-    lazy loading, which silently omits years nobody has looked up yet.
-    """
+    "Fresh load of calendar object instead of lazy load"
     return holidays.NYSE(years=range(start_year, end_year + 1))
 
 
@@ -107,8 +102,8 @@ def is_after_hours(date_str: str) -> bool:
 def next_holiday(date_str: str) -> tuple[str, int | None]:
     "returns the next holiday in MM-DD-YYYY format and how many days until that holiday"
     dt = parse(date_str)
-    nyse_holidays = nyse_holidays(dt.year, dt.year + 1)
-    for holiday_date in sorted(nyse_holidays):
+    holiday_cal = nyse_holidays(dt.year, dt.year + 1)
+    for holiday_date in sorted(holiday_cal):
         if holiday_date > dt.date():
             days_until = (holiday_date - dt.date()).days
             return holiday_date.strftime("%m-%d-%Y"), days_until
@@ -116,41 +111,41 @@ def next_holiday(date_str: str) -> tuple[str, int | None]:
 
 def next_trading_day(date_str: str) -> str:
     dt = parse(date_str)
-    nyse_holidays = nyse_holidays(dt.year, dt.year + 1)
+    holiday_cal = nyse_holidays(dt.year, dt.year + 1)
     next_day = dt.date()
     while True:
         next_day += timedelta(days=1)
-        if next_day not in nyse_holidays and next_day.weekday() < 5:
+        if next_day not in holiday_cal and next_day.weekday() < 5:
             break
     return next_day.strftime("%m-%d-%Y")
 
 def previous_trading_day(date_str: str) -> str:
     dt = parse(date_str)
-    nyse_holidays = nyse_holidays(dt.year - 1, dt.year)
+    holiday_cal = nyse_holidays(dt.year - 1, dt.year)
     prev_day = dt.date()
     while True:
         prev_day -= timedelta(days=1)
-        if prev_day not in nyse_holidays and prev_day.weekday() < 5:
+        if prev_day not in holiday_cal and prev_day.weekday() < 5:
             break
     return prev_day.strftime("%m-%d-%Y")
 
 def last_trading_day_of_week(date_str: str) -> str:
     dt = parse(date_str)
-    nyse_holidays = nyse_holidays(dt.year - 1, dt.year)
+    holiday_cal = nyse_holidays(dt.year - 1, dt.year)
     last_day = dt.date()
     while True:
-        if last_day.weekday() == 4 and last_day not in nyse_holidays:
+        if last_day.weekday() == 4 and last_day not in holiday_cal:
             break
         last_day -= timedelta(days=1)
     return last_day.strftime("%m-%d-%Y")
 
 def last_trading_day_of_month(date_str: str) -> str:
     dt = parse(date_str)
-    nyse_holidays = nyse_holidays(dt.year - 1, dt.year)
+    holiday_cal = nyse_holidays(dt.year - 1, dt.year)
     last_day = dt.date().replace(day=1) + timedelta(days=32)
     last_day = last_day.replace(day=1) - timedelta(days=1)
     while True:
-        if last_day.weekday() < 5 and last_day not in nyse_holidays:
+        if last_day.weekday() < 5 and last_day not in holiday_cal:
             break
         last_day -= timedelta(days=1)
     return last_day.strftime("%m-%d-%Y")
@@ -160,11 +155,11 @@ def last_trading_day_ndays_ago(date_str: str, n: int) -> str:
     # ~252 trading days/year; overestimate the calendar-year span so the
     # walk below never steps outside the populated holiday range.
     years_back = n // 200 + 2
-    nyse_holidays = nyse_holidays(dt.year - years_back, dt.year)
+    holiday_cal = nyse_holidays(dt.year - years_back, dt.year)
     last_day = dt.date()
     count = 0
     while count < n:
         last_day -= timedelta(days=1)
-        if last_day.weekday() < 5 and last_day not in nyse_holidays:
+        if last_day.weekday() < 5 and last_day not in holiday_cal:
             count += 1
     return last_day.strftime("%m-%d-%Y")
