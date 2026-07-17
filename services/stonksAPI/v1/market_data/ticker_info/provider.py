@@ -7,12 +7,12 @@ class TickerInfoProvider:
         self.base = "https://api.massive.com/"
 
 
-    async def get_tickerinfo(self, ticker: str, date: str|int|None):
+    async def get_ticker_info(self, ticker: str, date: str|int|None):
         ticker = ticker.upper()
         if date:
             url = self.base + "v3/reference/tickers/" + f"{ticker}?date={date}&" + self.api_key
         else: 
-            url = self.base + f"{ticker}?" + self.api_key
+            url = self.base + f"v3/reference/tickers/{ticker}?" + self.api_key
         data = await self.client.fetch(url)
 
         result = {

@@ -8,7 +8,7 @@ from services.stonksAPI.v1.market_data.ticker_info.schema import TickerInfoRespo
 from services.stonksAPI.v1.market_data.ticker_info.schema import RelatedResponse
 
 
-router = APIRouter(prefix="/tickerinfo", tags=["ticker info"])
+router = APIRouter(prefix="/tickerinfo", tags=["Ticker Info"])
 
 
 def get_client(request: Request) -> Client:
@@ -24,17 +24,16 @@ def get_service(provider: TickerInfoProvider = Depends(get_provider)) -> TickerI
 
 
 @router.get("", response_model=TickerInfoResponse)
-async def get_tickerinfo(
+async def get_ticker_info(
     ticker: str,
     date: str|int|None = None,
     service: TickerInfoService = Depends(get_service),
 ):
-    return await service.get_tickerinfo(ticker, date)
+    return await service.get_ticker_info(ticker, date)
 
 @router.get("/related", response_model=RelatedResponse)
 async def get_related(
     ticker: str,
     service: TickerInfoService = Depends(get_service)
 ):
-    get_related
     return await service.get_related(ticker)
