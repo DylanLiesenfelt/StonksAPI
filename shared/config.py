@@ -20,3 +20,11 @@ TRADES_URL = os.getenv("TRADES_URL")
 INDEXES_DB_URL = os.getenv("INDEXES_DB_URL")
 TRADES_DB_URL = os.getenv("TRADES_DB_URL")
 
+def get_MASSIVE_KEY() -> str | None:
+    return MASSIVE_KEY
+
+def get_ADMIN_KEY() -> str | None:
+    return ADMIN_KEY
+
+def get_STONKS_KEYS() -> dict | None:
+    return STONKS_KEYS    

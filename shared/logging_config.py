@@ -19,7 +19,7 @@ LOGGING_CONFIG = {
     "loggers": {
         "app": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "uvicorn": {"handlers": ["console"], "level": "INFO", "propagate": False},
-        "uvicorn.access": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "uvicorn.access": {"handlers": ["console"], "level": "WARNING", "propagate": False},
         "httpx": {"handlers": ["console"], "level": "WARNING", "propagate": False},
     },
 }
