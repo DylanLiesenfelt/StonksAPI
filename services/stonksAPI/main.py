@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from shared.middleware import LoggingMiddleware
+from shared.error_handler import register_exception_handlers
 from services.stonksAPI.utils.startup import run_startup
 
 from public.root_html import ROOT_HTML
@@ -15,6 +16,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(LoggingMiddleware)
+register_exception_handlers(app)
 app.include_router(v1_router)
 app.mount("/public", StaticFiles(directory="public"), name="public")
 
