@@ -5,7 +5,7 @@ from services.stonksAPI.v1.market_data.historical.provider import HistoricalProv
 from services.stonksAPI.v1.market_data.historical.schema import HistoricalResponse
 from services.stonksAPI.v1.market_data.historical.service import HistoricalService
 
-router = APIRouter(prefix="/historical", tags=["historical"])
+router = APIRouter(prefix="/historical", tags=["Historical"])
 
 
 def get_client(request: Request) -> Client:

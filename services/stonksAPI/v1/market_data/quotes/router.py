@@ -5,7 +5,7 @@ from services.stonksAPI.v1.market_data.quotes.provider import QuotesProvider
 from services.stonksAPI.v1.market_data.quotes.schema import QuotesResponse
 from services.stonksAPI.v1.market_data.quotes.service import QuotesService
 
-router = APIRouter(prefix="/quotes", tags=["quotes"])
+router = APIRouter(prefix="/quotes", tags=["Quotes"])
 
 
 def get_client(request: Request) -> Client:
