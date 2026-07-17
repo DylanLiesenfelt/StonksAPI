@@ -1,5 +1,10 @@
-# StonksAPI
-The StonksAPI is a comprehensive stock market data and analysis application. The application is a standalone instance, we encourage others to run and modify the application for their own uses. If you would like to test it the most recent version of the application, you can do so by visiting the APIs doc endpoint at (http://not-yet-implemented/docs), or for a more user friendly experience visit https://www.bubbanaut.net/projects/stonksAPI.
+<div align="center">
+  <img src="public/stonks_meme.jpg" alt="stonks meme" width="320">
+</div>
+
+The StonksAPI is a comprehensive stock market data and analysis application. The application is a standalone instance, we encourage others to run and modify the application for their own uses. Visiting the root of a running instance shows this same page. Once the app is running, interactive API documentation is available at the `/docs` endpoint. For a more user friendly experience visit https://www.bubbanaut.net/projects/stonksAPI.
+
+All data endpoints require an API key, sent with each request. Simple health and readiness checks are available and don't require a key.
 
 ## Legal Disclaimer
 The stock information, market data, and analysis provided on by this application are for informational and educational purposes only. They do not constitute, and should not be construed as, investment or financial advice.
@@ -16,24 +21,22 @@ We hold no claim over the ownership of any stock prices, market data, or analysi
 We are not currently accepting contributions from the public at this time.
 
 ### Market Data
-Data provider service, the backbone of all other features. Collects and provides stock market data, including real-time quotes, historical prices, and other relevant information. Currently provided by Massive.com API at a 15-minute delay. 
-
-** To be implemented in v0.1.0 **
+Data provider service, the backbone of all other features. Collects and provides stock market data, including real-time quotes, historical prices, and other relevant information. Currently provided by Massive.com API at a 15-minute delay.
 
 #### Endpoints
-- `/marketdata/quotes?{tickers}` - Get real-time stock quotes for a list of symbols. ✅
+- `/v1/marketdata/quotes?tickers={tickers}` - Get real-time stock quotes for a comma-separated list of symbols (e.g. `AAPL,MSFT,NVDA`). ✅
 
-- `/marketdata/historical?tickers={tickers}&start={start}&end={end}` - Retrieve historical stock price data for a list of symbols over a defined time range. ✅
+- `/v1/marketdata/historical?ticker={ticker}&interval={interval}&timeframe={timeframe}&start_date={start_date}&end_date={end_date}` - Retrieve historical stock price data for a single symbol over a defined time range. ✅
 
-- `/marketdata/market_status` - Check the current status of the stock market (open, pre-market, after-hours). As well next trading day, upcomming holidays,  last trading day of the week, and month. ✅
+- `/v1/marketdata/marketstatus` - Check the current status of the stock market (open, pre-market, after-hours). As well as the next trading day, upcoming holidays, and the last trading day of the week and month. ✅
 
-- `/marketdata/news` - Get the latest market news and headlines from various sources. 
+- `/v1/marketdata/news` - Get the latest market news and headlines from various sources. ❌ TBD implemented
 
-- `/marketdata/news?tickers={tickers}` - Get the latest market news and headlines for a list of symbols. 
+- `/v1/marketdata/news?tickers={tickers}` - Get the latest market news and headlines for a list of symbols. ❌ TBD implemented
 
-- `/marketdata/tickerinfo?ticker={ticker}&date={date}` - Retrieve relevant information for an individual stock ticker on a specific date or current date. ✅
+- `/v1/marketdata/tickerinfo?ticker={ticker}&date={date}` - Retrieve relevant information for an individual stock ticker on a specific date or current date. ✅
 
-- `/marketdata/tickerinfo/related?ticker={ticker}` - Retrieve a list of related stock tickers ✅
+- `/v1/marketdata/tickerinfo/related?ticker={ticker}` - Retrieve a list of related stock tickers. ✅
 
 ### Custom Indexes
 A service that builds, maintains, and provides data related to custom stock indexes. 
@@ -71,33 +74,33 @@ Sub-Indexes:
 ** To be implemented in v0.2.0 **
 
 #### Endpoints
-- `/indexes/{ticker}` - Provides current value of the custom index
+- `/v1/indexes/{ticker}` - Provides current value of the custom index
 
-- `/indexes/{ticker}?start={start}&end={end}` - Provides historical data on a range for a custom index
+- `/v1/indexes/{ticker}?start={start}&end={end}` - Provides historical data on a range for a custom index
 
 ### Indicators
 Feature that calculates and provides various technical indicators based on historical stock price data. ** To be implemented in v0.3.0 **
 
 #### Endpoints
-- `/indicators/{ticker}?indicator={indicator}&interval={interval}` - Calculate and retrieve the specified technical indicator for a given stock ticker for the most recent data over a defined interval.
+- `/v1/indicators/{ticker}?indicator={indicator}&interval={interval}` - Calculate and retrieve the specified technical indicator for a given stock ticker for the most recent data over a defined interval.
 
-- `/indicators/{ticker}?indicator={indicator}&start={start}&end={end}&interval={interval}` - Calculate and retrieve the specified technical indicator for a given stock ticker over a defined time range.
+- `/v1/indicators/{ticker}?indicator={indicator}&start={start}&end={end}&interval={interval}` - Calculate and retrieve the specified technical indicator for a given stock ticker over a defined time range.
 
 ### Signals
 Feature that generates buy/sell signals based on predefined technical analysis strategies and indicators. ** To be implemented in v0.3.0 **
 
 #### Endpoints
-- `/signals/{ticker}?signal={signal}&interval={interval}` - Generate and retrieve buy/sell signals for a given stock ticker based on predefined technical analysis strategies and indicators for the most recent data over a defined interval.
+- `/v1/signals/{ticker}?signal={signal}&interval={interval}` - Generate and retrieve buy/sell signals for a given stock ticker based on predefined technical analysis strategies and indicators for the most recent data over a defined interval.
 
-- `/signals/{ticker}?signal={signal}&start={start}&end={end}&interval={interval}` - Generate and retrieve buy/sell signals for a given stock ticker based on predefined technical analysis strategies and indicators.
+- `/v1/signals/{ticker}?signal={signal}&start={start}&end={end}&interval={interval}` - Generate and retrieve buy/sell signals for a given stock ticker based on predefined technical analysis strategies and indicators.
 
 ### Trading Algos
 Feature that brings together market data, technical indicators, and trading signals to create automated trading strategies and provide buy/sell signal and the related data that led to that result. ** To be implemented in v0.4.0 **
 
 #### Endpoints
-- `/trading_algos/{ticker}?algo={algo}&interval={interval}` - Execute and retrieve the results of a specified trading algorithm for a given stock ticker at a defined interval for the most recent data.
+- `/v1/trading_algos/{ticker}?algo={algo}&interval={interval}` - Execute and retrieve the results of a specified trading algorithm for a given stock ticker at a defined interval for the most recent data.
 
-- `/trading_algos/{ticker}?algo={algo}&start={start}&end={end}&interval={interval}` - Execute and retrieve the results of a specified trading algorithm for a given stock ticker over a defined time range.
+- `/v1/trading_algos/{ticker}?algo={algo}&start={start}&end={end}&interval={interval}` - Execute and retrieve the results of a specified trading algorithm for a given stock ticker over a defined time range.
 
 ### Paper Trading
 A background service that simulates trading based on the results of the trading algorithms. It provides trade logs and performance metrics of different trading strategies. This service only serves the historical and current data of the trade strategies users can not create startegies, the startegies are predefined by the system. ** To be implemented in v0.5.0 **
