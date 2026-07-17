@@ -22,7 +22,8 @@ def get_service(provider: QuotesProvider = Depends(get_provider)) -> QuotesServi
 
 @router.get("", response_model=QuotesResponse)
 async def get_quotes(
-    tickers: list[str] = Query(...),
+    tickers: str = Query(..., description="Comma-separated tickers, e.g. AAPL,MSFT"),
     service: QuotesService = Depends(get_service),
 ):
-    return await service.get_quotes(tickers)
+    ticker_list = [t.strip() for t in tickers.split(",") if t.strip()]
+    return await service.get_quotes(ticker_list)

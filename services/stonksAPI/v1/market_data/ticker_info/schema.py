@@ -11,4 +11,4 @@ class TickerInfoResponse(BaseModel):
     icon      : str
 
 class RelatedResponse(BaseModel):
-    tickers : list[str] | str
+    tickers : list[str]

@@ -9,7 +9,7 @@ class HistoricalService:
             self,
             ticker: str,
             interval: int = 15,
-            timeframe: str = "day",
+            timeframe: str = "minute",
             start_date: str|int|None = None,
             end_date: str|int|None = None
         ):

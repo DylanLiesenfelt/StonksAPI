@@ -22,11 +22,11 @@ def get_service(provider: HistoricalProvider = Depends(get_provider)) -> Histori
 
 @router.get("", response_model=HistoricalResponse)
 async def get_historical(
-    ticker: str,
-    interval: int = 15,
-    timeframe: str = "minute",
-    start_date: str|int|None = None,
-    end_date: str|int|None = None,
+    ticker: str = Query(..., description="Stock ticker symbol, e.g. AAPL"),
+    interval: int = Query(15, description="Size of each bar, paired with timeframe (e.g. 15 + minute = 15-minute bars)"),
+    timeframe: str = Query("minute", description="Bar unit: minute, hour, day, week, month, quarter, or year"),
+    start_date: str|int|None = Query(None, description="Start of the range (MM-DD-YYYY). Defaults to 01-02-2026 if omitted."),
+    end_date: str|int|None = Query(None, description="End of the range (MM-DD-YYYY). Defaults to the current date if omitted."),
     service: HistoricalService = Depends(get_service),
 ):
     return await service.get_historical(ticker, interval, timeframe, start_date, end_date)

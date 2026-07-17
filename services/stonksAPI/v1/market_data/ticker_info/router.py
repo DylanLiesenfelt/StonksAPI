@@ -25,15 +25,15 @@ def get_service(provider: TickerInfoProvider = Depends(get_provider)) -> TickerI
 
 @router.get("", response_model=TickerInfoResponse)
 async def get_ticker_info(
-    ticker: str,
-    date: str|int|None = None,
+    ticker: str = Query(..., description="Stock ticker symbol, e.g. AAPL"),
+    date: str|int|None = Query(None, description="Look up ticker info as of this date (MM-DD-YYYY). Defaults to the current date if omitted."),
     service: TickerInfoService = Depends(get_service),
 ):
     return await service.get_ticker_info(ticker, date)
 
 @router.get("/related", response_model=RelatedResponse)
 async def get_related(
-    ticker: str,
+    ticker: str = Query(..., description="Stock ticker symbol, e.g. AAPL"),
     service: TickerInfoService = Depends(get_service)
 ):
     return await service.get_related(ticker)

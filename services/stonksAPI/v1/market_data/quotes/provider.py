@@ -9,7 +9,7 @@ class QuotesProvider:
 
 
     async def get_quotes(self, tickers: list[str] = None):
-        result = {}
+        result = []
         if not tickers:
             return result
 
@@ -20,10 +20,10 @@ class QuotesProvider:
             last_minute = item.get("last_minute")
             if not last_minute:
                 continue
-            result[item["ticker"]] = {
-                "name": item["name"],
+            result.append({
+                "ticker": item["ticker"],
                 "close": last_minute["close"],
-                "last_updated": convert_from_ns(last_minute["last_updated"])
-            }
+                "updated": convert_from_ns(last_minute["last_updated"])
+            })
 
         return result
