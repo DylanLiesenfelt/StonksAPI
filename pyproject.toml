@@ -1,2 +1,2 @@
 [tool.fastapi]
-entrypoint = "app.main:app"
+entrypoint = "services.stonksAPI.main:app"
