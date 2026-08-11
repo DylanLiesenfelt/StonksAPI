@@ -67,7 +67,7 @@ classDiagram
     class Quote {
         <<DataClass>>
         + ticker: str
-        + price: Decimal
+        + price: float
         + timestamp: datetime
     }
 
@@ -77,7 +77,7 @@ classDiagram
         + company_name: str
         + headquarters_location: str
         + logo_url: str
-        + market_cap: Decimal
+        + market_cap: float
         + share_float: int
     }
 
@@ -85,10 +85,10 @@ classDiagram
         <<DataClass>>
         + ticker: str
         + timestamp: datetime
-        + open: Decimal
-        + high: Decimal
-        + low: Decimal
-        + close: Decimal
+        + open: float
+        + high: float
+        + low: float
+        + close: float
         + volume: int
     }
 
@@ -109,7 +109,7 @@ classDiagram
     class IndicatorPoint {
         <<DataClass>>
         + timestamp: datetime
-        + value: Decimal
+        + value: float
     }
 
 
