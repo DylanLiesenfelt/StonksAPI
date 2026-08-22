@@ -1,5 +1,4 @@
 from services.market_data.models.dataclasses.IndicatorParams import IndicatorParams
-from datetime import datetime
 import pydantic
 import pytest
 
