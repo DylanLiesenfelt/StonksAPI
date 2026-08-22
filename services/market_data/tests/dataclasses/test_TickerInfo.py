@@ -1,9 +1,6 @@
-from market_data.models.TickerInfo import TickerInfo
+from services.market_data.models.dataclasses.TickerInfo import TickerInfo
 import pydantic
 import pytest
-
-# TickerInfo data comes from:
-# https://massive.com/docs/rest/stocks/tickers/ticker-overview
 
 valid_data = {
     "ticker" : "AAPL",
