@@ -155,7 +155,7 @@ sequenceDiagram
 ## 4. API / Endpoint Definitions (v1)
 
 | Method | Endpoint | Description |
-|---|---|---|
+| --- | --- | --- |
 | GET | /quotes/{ticker} | Latest quote for one ticker |
 | GET | /quotes?tickers={tickers} | Latest quotes for multiple tickers |
 | GET | /tickers/{ticker}/info | Company info for a ticker |

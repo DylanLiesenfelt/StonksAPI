@@ -17,10 +17,9 @@ The Index Service does not fetch data directly from external providers. It obtai
 ```mermaid
 classDiagram
     direction LR
-
+ 
     namespace api {
-        class IndexRouter {
-            <<Router>>
+        class Indexes {
             + get_index_quote(ticker: str) IndexQuote
             + get_all_index_quotes() list~IndexQuote~
             + get_index_history(ticker: str, start: int, end: int) list~IndexQuote~
@@ -133,7 +132,7 @@ classDiagram
         }
     }
 
-    IndexRouter --> IndexService : delegates to
+    Indexes --> IndexService : delegates to
     IndexService --> IndexRepository : persists/retrieves through
     IndexService --> MarketDataClient : requests data through
     IndexService o-- Index : manages

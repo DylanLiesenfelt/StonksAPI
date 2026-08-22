@@ -5,7 +5,7 @@
 **Date:** August 21, 2026
 
 ---
-
+\ 
 ## 1. Purpose / Scope
 
 The Paper Trading Service manages persistent simulated trading activity. It maintains one account per configured strategy (FR-021), runs strategy evaluations on a schedule (FR-022), and generates simulated trades when a strategy produces an actionable `BUY` or `SELL` signal (FR-023). It owns all account state, cash, positions, trade history, and portfolio-value history, and calculates performance metrics on request.
