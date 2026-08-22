@@ -1,6 +1,3 @@
-# This unit test aims to test all data class objects for the service
-
-# Quotes
 from market_data.models.Quote import Quote
 from datetime import datetime
 import pydantic
