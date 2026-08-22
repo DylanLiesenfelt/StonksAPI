@@ -1,4 +1,4 @@
-from services.market_data.models.dataclasses.PriceBar import PriceBar
+from market_data.models.dataclasses.PriceBar import PriceBar
 from datetime import datetime
 import pydantic
 import pytest
@@ -82,8 +82,6 @@ invalid_dt = {
     "volume": 1000000,
     "ts": "not_a_valid_timestamp"
 }
-
-
 
 invalid_data = [invalid_ticker, invalid_open, invalid_high, invalid_low, invalid_close, invalid_volume, invalid_dt]
 

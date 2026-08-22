@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+
 # PriceBar data comes from:
 # https://massive.com/docs/rest/stocks/aggregates/custom-bars
 
