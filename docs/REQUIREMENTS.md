@@ -1,7 +1,8 @@
 # Requirements Document
 
 **Author:** Dylan Liesenfelt
-**Date:** August 8, 2026
+
+**Date:** August 21, 2026
 
 ---
 
@@ -55,15 +56,21 @@
 
 * **FR-017:** The system shall maintain the definition of each custom stock index, including its constituent stocks and any information required to calculate the index.
 
+* **FR-018:** The system shall validate, prior to each trading day's market open, that each constituent ticker of a configured custom stock index still exists and is actively tradable.
+
+* **FR-019:** The system shall maintain one or more backup constituent tickers for each custom stock index, to be used as replacements for a primary constituent ticker that becomes invalid.
+
+* **FR-020:** When a constituent ticker is found invalid, the system shall automatically replace it with a configured backup ticker and record the substitution in the system logs.
+
 ### Paper Trading
 
-* **FR-018:** The system shall support a single simulated paper-trading account per configured trading strategy.
+* **FR-021:** The system shall support a single simulated paper-trading account per configured trading strategy.
 
-* **FR-019:** The system shall automatically evaluate configured paper-trading strategies according to their configured execution schedules.
+* **FR-022:** The system shall automatically evaluate configured paper-trading strategies according to their configured execution schedules.
 
-* **FR-020:** The system shall generate simulated trades when a paper-trading strategy produces an actionable trading signal.
+* **FR-023:** The system shall generate simulated trades when a paper-trading strategy produces an actionable trading signal.
 
-* **FR-021:** The system shall maintain the state of each paper-trading account, including:
+* **FR-024:** The system shall maintain the state of each paper-trading account, including:
 
   * Available cash
   * Open positions
@@ -71,13 +78,13 @@
   * Average acquisition cost
   * Executed trades
 
-* **FR-022:** The system shall persist paper-trading account state and transaction history.
+* **FR-025:** The system shall persist paper-trading account state and transaction history.
 
-* **FR-023:** The system shall maintain historical portfolio values for paper-trading accounts.
+* **FR-026:** The system shall maintain historical portfolio values for paper-trading accounts.
 
-* **FR-024:** The system shall return performance information for a requested paper-trading strategy or account over a specified timeframe.
+* **FR-027:** The system shall return performance information for a requested paper-trading strategy or account over a specified timeframe.
 
-* **FR-025:** Paper-trading performance information shall include, when applicable:
+* **FR-028:** Paper-trading performance information shall include, when applicable:
 
   * Total return
   * Realized profit and loss
@@ -124,23 +131,25 @@
 
 * **NFR-010:** Credentials and API keys for external providers shall not be exposed through public API responses.
 
+* **NFR-011:** Internal API keys used for authenticating requests between the API Gateway and internal services shall exist only within the API Gateway and shall not be required by, or exposed to, downstream internal services.
+
 ### Maintainability
 
-* **NFR-011:** Internal services consuming market data shall not depend directly on the response format of a specific third-party financial-data provider.
+* **NFR-012:** Internal services consuming market data shall not depend directly on the response format of a specific third-party financial-data provider.
 
-* **NFR-012:** Third-party financial-data responses shall be transformed into internal system-defined data models before being consumed by other services.
+* **NFR-013:** Third-party financial-data responses shall be transformed into internal system-defined data models before being consumed by other services.
 
-* **NFR-013:** Trading indicators shall be implemented independently from trading strategies so that indicators may be reused by multiple strategies.
+* **NFR-014:** Trading indicators shall be implemented independently from trading strategies so that indicators may be reused by multiple strategies.
 
-* **NFR-014:** Trading strategy logic shall be separated from paper-trading account management.
+* **NFR-015:** Trading strategy logic shall be separated from paper-trading account management.
 
 ### Observability
 
-* **NFR-015:** Each incoming API request shall have a request or correlation identifier that can be propagated through downstream internal service calls.
+* **NFR-016:** Each incoming API request shall have a request or correlation identifier that can be propagated through downstream internal service calls.
 
-* **NFR-016:** Services shall produce structured logs containing sufficient information to identify the service, event, timestamp, and associated request identifier when applicable.
+* **NFR-017:** Services shall produce structured logs containing sufficient information to identify the service, event, timestamp, and associated request identifier when applicable.
 
-* **NFR-017:** Each independently deployed service shall expose a health endpoint that can be used to determine whether the service is operational.
+* **NFR-018:** Each independently deployed service shall expose a health endpoint that can be used to determine whether the service is operational.
 
 ### External Service Resilience
 
@@ -156,7 +165,7 @@
 
 * **CON-001:** The initial primary external market-data provider shall be Massive.com.
 
-* **CON-002:** Market data returned by Massive.com may be delayed according to the limitations of the configured Massive.com subscription. (15 minuets)
+* **CON-002:** Market data returned by Massive.com may be delayed according to the limitations of the configured Massive.com subscription. (15 minutes)
 
 * **CON-003:** PostgreSQL shall be used for persistent application data that requires relational storage.
 
@@ -182,11 +191,10 @@ Responsibilities include:
 * Request validation
 * Authentication where required
 * Routing requests to internal services
-* Coordinating requests requiring multiple internal services
 * Returning normalized API responses
 * Propagating request correlation identifiers
 
-The API Gateway shall not contain financial calculation or trading-strategy business logic.
+The API Gateway shall not contain financial calculation or trading-strategy business logic. The API Gateway routes each request to the single owning internal service, it does not itself decide that one internal service should call another on behalf of a request.
 
 ### External Data Service
 
