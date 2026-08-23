@@ -1,4 +1,4 @@
-from services.market_data.models.dataclasses.IndicatorResult import IndicatorResult
+from services.market_data.models.dataclasses import IndicatorResult
 from datetime import datetime
 import pydantic
 import pytest

@@ -1,4 +1,4 @@
-from services.market_data.models.dataclasses.IndicatorParams import IndicatorParams
+from services.market_data.models.dataclasses import IndicatorParams
 import pydantic
 import pytest
 

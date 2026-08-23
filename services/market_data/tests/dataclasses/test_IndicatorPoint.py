@@ -1,4 +1,4 @@
-from services.market_data.models.dataclasses.IndicatorPoint import IndicatorPoint
+from services.market_data.models.dataclasses import IndicatorPoint
 import pydantic
 import pytest
 
