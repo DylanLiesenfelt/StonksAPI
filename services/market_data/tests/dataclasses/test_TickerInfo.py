@@ -1,4 +1,4 @@
-from services.market_data.models.dataclasses import TickerInfo
+from market_data.models.schemas import TickerInfo
 import pydantic
 import pytest
 

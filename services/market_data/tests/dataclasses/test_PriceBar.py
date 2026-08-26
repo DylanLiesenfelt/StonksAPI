@@ -1,4 +1,4 @@
-from services.market_data.models.dataclasses import PriceBar
+from market_data.models.schemas import PriceBar
 from datetime import datetime
 import pydantic
 import pytest

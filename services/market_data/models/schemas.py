@@ -1,25 +1,11 @@
 from pydantic import BaseModel
 from datetime import datetime
 
-class IndicatorParams(BaseModel):
-    indicator: str
-    period: int
-    timeframe: str
-
-class IndicatorPoint(BaseModel):
-    value: float
-    ts: datetime
-
-class IndicatorResult(BaseModel):
-    indicator: str
-    timeframe: str
-    points: list[tuple[float, datetime]]
-
 # PriceBar data comes from:
 # https://massive.com/docs/rest/stocks/aggregates/custom-bars
 
 class PriceBar(BaseModel):
-    ticker: str
+    ticker: str 
     open: float
     high: float
     low: float

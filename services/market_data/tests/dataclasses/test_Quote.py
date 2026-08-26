@@ -1,4 +1,4 @@
-from services.market_data.models.dataclasses import Quote
+from market_data.models.schemas import Quote
 from datetime import datetime
 import pydantic
 import pytest
