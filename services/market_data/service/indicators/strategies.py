@@ -51,3 +51,26 @@ class EMA(IndicatorStrategy):
 
         return IndicatorResult(request_id=request_id, result=result, indicator_method="EMA", completed=dt_to_unixMS(datetime.now()))
         
+
+class VWAP(IndicatorStrategy):
+
+    def get_typical_price(self, high: float, low: float, close: float ):
+        return (high + low + close) / 3
+
+
+    def get_pv(self, high: float, low: float, close: float, vol:float):
+        tp = self.get_typical_price(high, low, close)
+        return tp * vol
+
+    
+    def calculate(self, history: list[PriceBar],  window: int, request_id: dict):
+        pv_data = {bar.ts: self.get_pv(bar.high, bar.low, bar.close, bar.volume) for bar in history}
+        vol_data = {bar.ts: bar.volume for bar in history}
+
+        pv = pd.Series(pv_data)
+        vol = pd.Series(vol_data)
+
+        d = pv.rolling(window=window).sum() / vol.rolling(window=window).sum()
+        d = d.dropna().to_dict()
+
+        return IndicatorResult(request_id=request_id, result=d, indicator_method="VWAP", completed=dt_to_unixMS(datetime.now()))
