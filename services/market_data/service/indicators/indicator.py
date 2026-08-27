@@ -1,5 +1,7 @@
 from market_data.service.indicators.schemas import IndicatorRequest
 from market_data.service.indicators.strategy import IndicatorStrategy
+
+
 class Indicator:
     def __int__(self, strategy: IndicatorStrategy, request: IndicatorRequest):
         self.strategy = strategy

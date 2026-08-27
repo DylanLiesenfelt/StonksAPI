@@ -1,5 +1,5 @@
 from market_data.models.schemas import PriceBar
-from datetime import datetime
+import time
 import pydantic
 import pytest
 
@@ -10,7 +10,7 @@ valid_data = {
     "low": 149.0,
     "close": 152.0,
     "volume": 1000000,
-    "ts": datetime.now()
+    "ts": time.time()
 }
 
 invalid_ticker = {
@@ -20,7 +20,7 @@ invalid_ticker = {
     "low": 149.0,
     "close": 152.0,
     "volume": 1000000,
-    "ts": datetime.now()
+    "ts": time.time()
 }
 
 invalid_open = {
@@ -30,17 +30,17 @@ invalid_open = {
     "low": 149.0,
     "close": 152.0,
     "volume": 1000000,
-    "ts": datetime.now()     
+    "ts": time.time()
 }
 
 invalid_high = {
     "ticker": "AAPL",
-    "open": 150.0,         
+    "open": 150.0,
     "high": "not_a_number",
     "low": 149.0,
     "close": 152.0,
     "volume": 1000000,
-    "ts": datetime.now()       
+    "ts": time.time()
 }
 
 invalid_low = {
@@ -50,7 +50,7 @@ invalid_low = {
     "low": "not_a_number",
     "close": 152.0,
     "volume": 1000000,
-    "ts": datetime.now()
+    "ts": time.time()
 }
 
 invalid_close = {
@@ -60,7 +60,7 @@ invalid_close = {
     "low": 149.0,
     "close": "not_a_number",
     "volume": 1000000,
-    "ts": datetime.now()
+    "ts": time.time()
 }
 
 invalid_volume = {
@@ -70,7 +70,7 @@ invalid_volume = {
     "low": 149.0,
     "close": 152.0,
     "volume": "not_a_number",
-    "ts": datetime.now()
+    "ts": time.time()
 }
 
 invalid_dt = {
@@ -94,7 +94,7 @@ def test_PriceBar_accepts_valid_data():
     assert p.low == 149.0
     assert p.close == 152.0
     assert p.volume == 1000000
-    assert isinstance(p.ts, datetime)
+    assert isinstance(p.ts, float)
 
 
 def test_PriceBar_rejects_invalid_data():

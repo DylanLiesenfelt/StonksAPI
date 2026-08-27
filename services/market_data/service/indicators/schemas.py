@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from datetime import datetime
+
 from market_data.models.schemas import PriceBar
 
 
@@ -11,9 +11,10 @@ class IndicatorData(BaseModel):
 
 class IndicatorResult(BaseModel):
     request_id: dict
+    ticker: str
     result: dict
     indicator_method: str
-    completed: int
+    completed: float
 
 
 class IndicatorRequest(BaseModel):
@@ -22,6 +23,6 @@ class IndicatorRequest(BaseModel):
     period: int
     timeframe: str
     window: int
-    start: datetime
-    end: datetime
-    recieved: int
+    start: float
+    end: float
+    recieved: float

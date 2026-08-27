@@ -1,8 +1,13 @@
-from datetime import datetime
-
 from market_data.models.schemas import PriceBar
 from market_data.service.indicators.schemas import IndicatorResult
 from market_data.service.indicators.strategies import ATR
+
+DAY_SECONDS = 86400
+BASE_TS = 1672531200.0  # 2023-01-01T00:00:00Z, fixed so tests are deterministic
+
+
+def ts_for_day(day):
+    return BASE_TS + (day - 1) * DAY_SECONDS
 
 
 def make_bar(day, high, low, close):
@@ -13,7 +18,7 @@ def make_bar(day, high, low, close):
         low=low,
         close=close,
         volume=1000,
-        ts=datetime(2023, 1, day)
+        ts=ts_for_day(day)
     )
 
 
@@ -40,9 +45,9 @@ def test_ATR_calculate_computes_wilder_smoothed_average():
     # day 4 = ((3.0 * (2-1)) + 4) / 2 = 3.5
     # day 5 = ((3.5 * (2-1)) + 2) / 2 = 2.75
     expected = {
-        datetime(2023, 1, 3): 3.0,
-        datetime(2023, 1, 4): 3.5,
-        datetime(2023, 1, 5): 2.75,
+        ts_for_day(3): 3.0,
+        ts_for_day(4): 3.5,
+        ts_for_day(5): 2.75,
     }
     assert result.result == expected
 
@@ -58,5 +63,6 @@ def test_ATR_calculate_returns_indicator_result():
     result = ATR().calculate(history, 2, request_id)
     assert isinstance(result, IndicatorResult)
     assert result.request_id == request_id
+    assert result.ticker == "AAPL"
     assert result.indicator_method == "ATR"
-    assert isinstance(result.completed, int)
+    assert isinstance(result.completed, float)

@@ -1,24 +1,24 @@
 from market_data.models.schemas import Quote
-from datetime import datetime
+import time
 import pydantic
 import pytest
 
 valid_data = {
     "ticker": "AAPL",
     "price": 220.36,
-    "ts": datetime.now()
+    "ts": time.time()
 }
 
 invalid_ticker = {
-    "ticker": 12345,  
+    "ticker": 12345,
     "price": 220.36,
-    "ts": datetime.now()
+    "ts": time.time()
 }
 
 invalid_price = {
     "ticker": "AAPL",
     "price": "not_a_number",
-    "ts": datetime.now()
+    "ts": time.time()
 }
 
 invalid_dt = {
