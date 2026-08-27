@@ -45,7 +45,7 @@ class EMA(IndicatorStrategy):
         _, first_sma = self.get_sma(history, window)
         result[history[window - 1].ts] = first_sma
 
-        # get rest of ema values
+       
         for i in range(window, len(history)):
             result[history[i].ts] = self.get_ema(history[i].close, result[history[i-1].ts], mult)
 
@@ -57,7 +57,7 @@ class VWAP(IndicatorStrategy):
     def get_typical_price(self, high: float, low: float, close: float ):
         return (high + low + close) / 3
 
-
+    # get price * volume
     def get_pv(self, high: float, low: float, close: float, vol:float):
         tp = self.get_typical_price(high, low, close)
         return tp * vol
@@ -74,3 +74,38 @@ class VWAP(IndicatorStrategy):
         d = d.dropna().to_dict()
 
         return IndicatorResult(request_id=request_id, result=d, indicator_method="VWAP", completed=dt_to_unixMS(datetime.now()))
+
+
+class ATR(IndicatorStrategy):
+
+    def get_true_range(self, curr_bar: PriceBar, prev_bar):
+        high = curr_bar.high
+        low = curr_bar.low
+        prev_close = prev_bar.close
+
+        hl = high - low
+        hc = abs(high - prev_close)
+        lc = abs(low - prev_close)
+
+        return max([hl,hc,lc])
+
+    def get_atr(self, prev_atr, curr_tr, window ):
+        return ((prev_atr * (window - 1)) + curr_tr) / window
+        
+    def calculate(self, history:list[PriceBar], window: int, request_id: dict):
+        # get first atr, simple average of the first `window` true range values
+        first_atr = sum(self.get_true_range(history[i], history[i-1]) for i in range(1, window + 1)) / window
+
+        results = {}
+        results[history[window].ts] = first_atr
+        prev_atr = first_atr
+
+        # get rest of values for atr
+        for i in range(window+1, len(history)):
+            tr = self.get_true_range(history[i], history[i-1])
+            atr  = self.get_atr(prev_atr, tr, window)
+
+            results[history[i].ts] = atr
+            prev_atr = atr
+
+        return IndicatorResult(request_id=request_id, result=results, indicator_method="ATR", completed=dt_to_unixMS(datetime.now()))
