@@ -4,6 +4,8 @@
 
 **Date:** August 21, 2026
 
+**Updated:** August 26, 2026
+
 ---
 
 ## 1. Purpose / Scope
@@ -41,10 +43,66 @@ classDiagram
             + get_ticker_bars(ticker: str, start: int, end: int, granularity: str) list~PriceBar~
             + get_indicator(ticker: str, indicator: str, end: int, period: int, timeframe: str) IndicatorResult
         }
+
+        class IndicatorStrategy {
+            <<Interface>>
+            + calculate(history: list~PriceBar~, window: int, request_id: dict) IndicatorResult
+        }
+
+        class Indicator {
+            <<Context>>
+            - strategy: IndicatorStrategy
+            - request: IndicatorRequest
+            + make_indicator() IndicatorResult
+        }
+
+        class SMA {
+            <<Indicator>>
+        }
+
+        class EMA {
+            <<Indicator>>
+        }
+
+        class VWAP {
+            <<Indicator>>
+        }
+
+        class ATR {
+            <<Indicator>>
+        }
+
+        class IndicatorData {
+            <<BaseModel>>
+            + request_id: dict
+            + price_history: list~PriceBar~
+            + window: int
+        }
+
+        class IndicatorRequest {
+            <<BaseModel>>
+            + request_id: dict
+            + ticker: str
+            + period: int
+            + timeframe: str
+            + window: int
+            + start: datetime
+            + end: datetime
+            + recieved: int
+        }
+
+        class IndicatorResult {
+            <<BaseModel>>
+            + request_id: dict
+            + result: dict
+            + indicator_method: str
+            + completed: int
+        }
     }
 
     namespace data {
         class MarketDataCache {
+            - cache: dict
             + get(key: str) CacheEntry
             + set(key: str, entry: CacheEntry)
             + is_stale(key: str) bool
@@ -74,27 +132,6 @@ classDiagram
     }
 
     namespace models {
-        class IndicatorStrategy {
-            <<Interface>>
-            + calculate(data: list~PriceBar~, params: IndicatorParams) IndicatorResult
-        }
-
-        class SMA {
-            <<Indicator>>
-        }
-
-        class EMA {
-            <<Indicator>>
-        }
-
-        class VWAP {
-            <<Indicator>>
-        }
-
-        class ATR {
-            <<Indicator>>
-        }
-
         class Quote {
             <<DataClass>>
             + ticker: str
@@ -122,32 +159,22 @@ classDiagram
             + close: float
             + volume: int
         }
+    }
 
-        class IndicatorParams {
-            <<DataClass>>
-            + period: int
-            + timeframe: str
-        }
-
-        class IndicatorResult {
-            <<DataClass>>
-            + ticker: str
-            + indicator: str
-            + timeframe: str
-            + values: list~IndicatorPoint~
-        }
-
-        class IndicatorPoint {
-            <<DataClass>>
-            + timestamp: datetime
-            + value: float
+    namespace utils {
+        class TimeUtils {
+            <<Module>>
+            + dt_to_unixMS(dt: datetime) int
+            + unixMS_to_dt(ms: int) datetime
         }
     }
 
     MarketDataRouter --> MarketDataService : delegates to
     MarketDataService --> MarketDataCache : uses
     MarketDataService --> DataProvider : retrieves data through
-    MarketDataService --> IndicatorStrategy : calculates with
+    MarketDataService --> Indicator : calculates with
+    MarketDataService ..> IndicatorRequest : builds
+    MarketDataService ..> IndicatorResult : returns
 
     MarketDataCache --> CacheEntry : stores
 
@@ -159,13 +186,17 @@ classDiagram
     VWAP ..|> IndicatorStrategy
     ATR ..|> IndicatorStrategy
 
+    Indicator --> IndicatorStrategy : delegates to
+    Indicator --> IndicatorRequest : uses
+    IndicatorStrategy ..> IndicatorData : accepts
+    IndicatorStrategy ..> IndicatorResult : returns
+
     DataProvider ..> Quote : returns
     DataProvider ..> TickerInfo : returns
     DataProvider ..> PriceBar : returns
+    IndicatorData ..> PriceBar : contains
 
-    IndicatorStrategy ..> IndicatorParams : accepts
-    IndicatorStrategy ..> IndicatorResult : returns
-    IndicatorResult *-- IndicatorPoint : contains
+    SMA ..> TimeUtils : uses
 ```
 
 ## 3. Sequence Diagrams
@@ -200,7 +231,8 @@ sequenceDiagram
     participant Svc as MarketDataService
     participant Cache as MarketDataCache
     participant P as MassiveProvider
-    participant Ind as IndicatorStrategy
+    participant Ind as Indicator
+    participant Strat as SMA
 
     R->>Svc: get_indicator("AAPL", "SMA", period, timeframe)
     Svc->>Cache: get(bars key)
@@ -211,7 +243,10 @@ sequenceDiagram
         P-->>Svc: list~PriceBar~
         Svc->>Cache: set(bars key, entry)
     end
-    Svc->>Ind: calculate(bars, params)
+    Svc->>Svc: build IndicatorRequest
+    Svc->>Ind: Indicator(strategy=SMA, request)
+    Ind->>Strat: calculate(history, window, request_id)
+    Strat-->>Ind: IndicatorResult
     Ind-->>Svc: IndicatorResult
     Svc-->>R: IndicatorResult
 ```
@@ -219,7 +254,7 @@ sequenceDiagram
 ## 4. API / Endpoint Definitions
 
 | Method | Endpoint | Description |
-|---|---|---|
+| --- | --- | --- |
 | GET | /quotes/{ticker} | Latest quote for one ticker |
 | GET | /quotes?tickers=A,B,C | Latest quotes for multiple tickers |
 | GET | /tickers/{ticker}/info | Company info for a ticker |
