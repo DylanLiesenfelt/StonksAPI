@@ -1,8 +1,8 @@
-import time
+from market_data .utils import ms_now
 
 from market_data.data.cache.schemas import CacheEntry
 from market_data.service.indicators.schemas import IndicatorResult
-from market_data.models.schemas import Quote, TickerInfo, PriceBar
+from market_data.data.providers.schemas import QuotesResult, TickerInfoResult, PriceBarsResult
 
 
 class MarketDataCache:
@@ -10,7 +10,8 @@ class MarketDataCache:
     def __init__(self, ttl: int = 180):
         self.cache = {}
         self.ttl = ttl  # Configurable, Default 3 mins for staleness
-        self.last_prune = time.time()
+        self.last_prune = ms_now()
+
 
     def get(self, ticker: str, data_type: type):
         self.prune_cache()
@@ -20,19 +21,20 @@ class MarketDataCache:
             return entry.data
         return None
 
-    def set(self, data: IndicatorResult | Quote | TickerInfo | PriceBar):
+
+    def set(self, data: IndicatorResult | QuotesResult | TickerInfoResult | PriceBarsResult):
         self.prune_cache()
 
         entry = CacheEntry(
-            data=data, 
-            created_at=time.time(), 
-            expire_at=time.time() + self.ttl
+            data=data,  
+            expire_at=ms_now() + self.ttl
         )
         
         self.cache.setdefault(data.ticker, {})[type(data)] = entry
 
+
     def prune_cache(self):
-        now = time.time()
+        now = ms_now()
 
         for ticker in list(self.cache.keys()):
             entries = self.cache[ticker]

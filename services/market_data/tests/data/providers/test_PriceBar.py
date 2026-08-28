@@ -1,80 +1,63 @@
-from market_data.models.schemas import PriceBar
-import time
 import pydantic
 import pytest
 
-valid_data = {
-    "ticker": "AAPL",
-    "open": 150.0,
-    "high": 155.0,
-    "low": 149.0,
-    "close": 152.0,
-    "volume": 1000000,
-    "ts": time.time()
-}
+from market_data.data.providers.schemas import PriceBar
 
-invalid_ticker = {
-   "ticker" : 12345,
+valid_data = {
     "open": 150.0,
     "high": 155.0,
     "low": 149.0,
     "close": 152.0,
     "volume": 1000000,
-    "ts": time.time()
+    "ts": 1_700_000_000_000
 }
 
 invalid_open = {
-    "ticker": "AAPL",
     "open": "not_a_number",
     "high": 155.0,
     "low": 149.0,
     "close": 152.0,
     "volume": 1000000,
-    "ts": time.time()
+    "ts": 1_700_000_000_000
 }
 
 invalid_high = {
-    "ticker": "AAPL",
     "open": 150.0,
     "high": "not_a_number",
     "low": 149.0,
     "close": 152.0,
     "volume": 1000000,
-    "ts": time.time()
+    "ts": 1_700_000_000_000
 }
 
 invalid_low = {
-    "ticker": "AAPL",
     "open": 150.0,
     "high": 155.0,
     "low": "not_a_number",
     "close": 152.0,
     "volume": 1000000,
-    "ts": time.time()
+    "ts": 1_700_000_000_000
 }
 
 invalid_close = {
-    "ticker": "AAPL",
     "open": 150.0,
     "high": 155.0,
     "low": 149.0,
     "close": "not_a_number",
     "volume": 1000000,
-    "ts": time.time()
+    "ts": 1_700_000_000_000
 }
 
 invalid_volume = {
-    "ticker": "AAPL",
     "open": 150.0,
     "high": 155.0,
     "low": 149.0,
     "close": 152.0,
     "volume": "not_a_number",
-    "ts": time.time()
+    "ts": 1_700_000_000_000
 }
 
-invalid_dt = {
-    "ticker": "AAPL",
+invalid_ts = {
     "open": 150.0,
     "high": 155.0,
     "low": 149.0,
@@ -83,18 +66,18 @@ invalid_dt = {
     "ts": "not_a_valid_timestamp"
 }
 
-invalid_data = [invalid_ticker, invalid_open, invalid_high, invalid_low, invalid_close, invalid_volume, invalid_dt]
+invalid_data = [invalid_open, invalid_high, invalid_low, invalid_close, invalid_volume, invalid_ts]
 
 
 def test_PriceBar_accepts_valid_data():
     p = PriceBar(**valid_data)
-    assert p.ticker == "AAPL"
     assert p.open == 150.0
     assert p.high == 155.0
     assert p.low == 149.0
     assert p.close == 152.0
     assert p.volume == 1000000
-    assert isinstance(p.ts, float)
+    assert p.ts == 1_700_000_000_000
+    assert isinstance(p.ts, int)
 
 
 def test_PriceBar_rejects_invalid_data():

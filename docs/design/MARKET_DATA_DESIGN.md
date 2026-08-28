@@ -4,7 +4,7 @@
 
 **Date:** August 21, 2026
 
-**Updated:** August 26, 2026
+**Updated:** August 28, 2026
 
 ---
 
@@ -46,7 +46,7 @@ classDiagram
 
         class IndicatorStrategy {
             <<Interface>>
-            + calculate(history: list~PriceBar~, window: int, request_id: dict) IndicatorResult
+            + calculate(history: dict~int, PriceBar~, window: int, ticker: str, request_id: dict) IndicatorResult
         }
 
         class Indicator {
@@ -75,7 +75,8 @@ classDiagram
         class IndicatorData {
             <<BaseModel>>
             + request_id: dict
-            + price_history: list~PriceBar~
+            + ticker: str
+            + price_history: dict~int, PriceBar~
             + window: int
         }
 
@@ -86,40 +87,40 @@ classDiagram
             + period: int
             + timeframe: str
             + window: int
-            + start: datetime
-            + end: datetime
-            + recieved: int
+            + start: int
+            + end: int
+            + received_at: int
         }
 
         class IndicatorResult {
             <<BaseModel>>
             + request_id: dict
+            + ticker: str
             + result: dict
             + indicator_method: str
-            + completed: int
+            + completed_at: int
         }
     }
 
     namespace data {
         class MarketDataCache {
             - cache: dict
-            + get(key: str) CacheEntry
-            + set(key: str, entry: CacheEntry)
-            + is_stale(key: str) bool
+            + get(ticker: str, data_type: type) Any
+            + set(data: IndicatorResult | QuotesResult | TickerInfoResult | PriceBarsResult)
+            + prune_cache()
         }
 
         class CacheEntry {
             <<DataClass>>
-            + data: Any
-            + timestamp: datetime
+            + data: IndicatorResult | QuotesResult | TickerInfoResult | PriceBarsResult
+            + expire_at: int
         }
 
-        class DataProvider {
+        class Provider {
             <<Interface>>
-            + get_quote(ticker: str) Quote
-            + get_quotes(tickers: list~str~) list~Quote~
-            + get_ticker_info(ticker: str) TickerInfo
-            + get_ticker_bars(ticker: str, start: int, end: int, granularity: str) list~PriceBar~
+            + get_quotes(request: QuotesRequest) QuotesResult
+            + get_ticker_info(request: TickerInfoRequest) TickerInfoResult
+            + get_ticker_bars(request: PriceBarsRequest) PriceBarsResult
         }
 
         class MassiveProvider {
@@ -128,58 +129,98 @@ classDiagram
 
         class YahooProvider {
             <<Provider>>
+            <<planned, not yet implemented>>
         }
     }
 
-    namespace models {
-        class Quote {
-            <<DataClass>>
-            + ticker: str
-            + price: float
-            + timestamp: datetime
+    namespace schemas {
+        class QuotesRequest {
+            <<BaseModel>>
+            + request_id: dict
+            + tickers: list~str~
+            + received_at: int
         }
 
-        class TickerInfo {
-            <<DataClass>>
+        class Quote {
+            <<BaseModel>>
+            + price: float
+            + ts: int
+        }
+
+        class QuotesResult {
+            <<BaseModel>>
+            + request_id: dict
+            + tickers: list~str~
+            + data: dict~str, Quote~
+            + completed_at: int
+        }
+
+        class TickerInfoRequest {
+            <<BaseModel>>
+            + request_id: dict
+            + ticker: str
+            + received_at: int
+        }
+
+        class TickerInfoResult {
+            <<BaseModel>>
+            + request_id: dict
             + ticker: str
             + company_name: str
-            + headquarters_location: str
+            + hq_location: dict~str, str~
             + logo_url: str
             + market_cap: float
-            + share_float: int
+            + completed_at: int
+        }
+
+        class PriceBarsRequest {
+            <<BaseModel>>
+            + request_id: dict
+            + ticker: str
+            + window: int
+            + timeframe: str
+            + start: int
+            + end: int
+            + received_at: int
         }
 
         class PriceBar {
-            <<DataClass>>
-            + ticker: str
-            + timestamp: datetime
+            <<BaseModel>>
             + open: float
             + high: float
             + low: float
             + close: float
             + volume: int
+            + ts: int
+        }
+
+        class PriceBarsResult {
+            <<BaseModel>>
+            + request_id: dict
+            + ticker: str
+            + data: dict~int, PriceBar~
+            + completed_at: int
         }
     }
 
     namespace utils {
-        class TimeUtils {
+        class Utils {
             <<Module>>
-            + dt_to_unixMS(dt: datetime) int
-            + unixMS_to_dt(ms: int) datetime
+            + ms_now() int
         }
     }
 
     MarketDataRouter --> MarketDataService : delegates to
     MarketDataService --> MarketDataCache : uses
-    MarketDataService --> DataProvider : retrieves data through
+    MarketDataService --> Provider : retrieves data through
     MarketDataService --> Indicator : calculates with
     MarketDataService ..> IndicatorRequest : builds
     MarketDataService ..> IndicatorResult : returns
 
     MarketDataCache --> CacheEntry : stores
 
-    MassiveProvider ..|> DataProvider
-    YahooProvider ..|> DataProvider
+    MassiveProvider ..|> Provider
+    YahooProvider ..|> Provider
 
     SMA ..|> IndicatorStrategy
     EMA ..|> IndicatorStrategy
@@ -191,11 +232,17 @@ classDiagram
     IndicatorStrategy ..> IndicatorData : accepts
     IndicatorStrategy ..> IndicatorResult : returns
 
-    DataProvider ..> Quote : returns
-    DataProvider ..> TickerInfo : returns
-    DataProvider ..> PriceBar : returns
+    Provider ..> QuotesRequest : accepts
+    Provider ..> QuotesResult : returns
+    Provider ..> TickerInfoRequest : accepts
+    Provider ..> TickerInfoResult : returns
+    Provider ..> PriceBarsRequest : accepts
+    Provider ..> PriceBarsResult : returns
+    QuotesResult ..> Quote : contains
+    PriceBarsResult ..> PriceBar : contains
     IndicatorData ..> PriceBar : contains
 
+    MassiveProvider ..> TimeUtils : uses
     SMA ..> TimeUtils : uses
 ```
 
@@ -211,14 +258,14 @@ sequenceDiagram
     participant P as MassiveProvider
 
     R->>Svc: get_quote("AAPL")
-    Svc->>Cache: get("quote:AAPL")
+    Svc->>Cache: get("AAPL", QuotesResult)
     alt cache hit and fresh
         Cache-->>Svc: CacheEntry
         Svc-->>R: Quote
     else cache miss or stale
-        Svc->>P: get_quote("AAPL")
-        P-->>Svc: Quote
-        Svc->>Cache: set("quote:AAPL", entry)
+        Svc->>P: get_quotes(QuotesRequest(tickers=["AAPL"]))
+        P-->>Svc: QuotesResult
+        Svc->>Cache: set(result)
         Svc-->>R: Quote
     end
 ```
@@ -235,17 +282,17 @@ sequenceDiagram
     participant Strat as SMA
 
     R->>Svc: get_indicator("AAPL", "SMA", period, timeframe)
-    Svc->>Cache: get(bars key)
+    Svc->>Cache: get("AAPL", PriceBarsResult)
     alt bars cached and fresh
         Cache-->>Svc: CacheEntry
     else bars missing or stale
-        Svc->>P: get_ticker_bars("AAPL", start, end, timeframe)
-        P-->>Svc: list~PriceBar~
-        Svc->>Cache: set(bars key, entry)
+        Svc->>P: get_ticker_bars(PriceBarsRequest(...))
+        P-->>Svc: PriceBarsResult
+        Svc->>Cache: set(result)
     end
     Svc->>Svc: build IndicatorRequest
     Svc->>Ind: Indicator(strategy=SMA, request)
-    Ind->>Strat: calculate(history, window, request_id)
+    Ind->>Strat: calculate(history, window, ticker, request_id)
     Strat-->>Ind: IndicatorResult
     Ind-->>Svc: IndicatorResult
     Svc-->>R: IndicatorResult
@@ -263,7 +310,7 @@ sequenceDiagram
 
 ## 5. Data Model / Persistence
 
-This service's `data/` layer has no database-backed repository, per ARCHITECTURE.md. Instead `data/` holds `MarketDataCache` (backend TBD, in-memory) and the provider adapters (`MassiveProvider`, `YahooProvider`).
+This service's `data/` layer has no database-backed repository, per ARCHITECTURE.md. Instead `data/` holds `MarketDataCache` (backend TBD, in-memory), the provider adapters (`MassiveProvider`, `YahooProvider`) under `data/providers/`, and the DTOs each provider method accepts/returns (`data/providers/schemas.py`), one Request/Result pair per method, plus an `Object` class (`Quote`, `PriceBar`) for methods whose result holds more than one data point.
 
 Quotes and bars are not persisted long-term here. Services that need persisted history (e.g. Index Service) store it in their own owned datastore, sourced from this service.
 
@@ -273,14 +320,14 @@ Quotes and bars are not persisted long-term here. Services that need persisted h
 - Retries against a provider use a bounded retry policy (NFR-020).
 - If a provider fails after retries, the service returns a defined application error (e.g. `ProviderUnavailableError`), never an unhandled exception (NFR-021).
 - A temporary provider failure does not corrupt cached or internally persisted data (NFR-004).
-- Provider-specific response shapes never reach calling services, everything is normalized into `Quote`, `TickerInfo`, `PriceBar`, etc. before returning (NFR-012, NFR-013).
+- Provider-specific response shapes never reach calling services, everything is normalized into `QuotesResult`, `TickerInfoResult`, `PriceBarsResult`, etc. before returning (NFR-012, NFR-013).
 - `MassiveProvider` failure does not crash unrelated internal services (NFR-003). A fallback provider (`YahooProvider`) may be attempted depending on configured provider priority.
-- Because `MassiveProvider` and `YahooProvider` both implement `DataProvider`, `MarketDataService` can be unit tested against a fake provider that simulates a failure or slow response, without making a real network call (Liskov Substitution, supports TDD).
+- Because `MassiveProvider` and `YahooProvider` both implement `Provider`, `MarketDataService` can be unit tested against a fake provider that simulates a failure or slow response, without making a real network call (Liskov Substitution, supports TDD).
 
 ## 7. Dependencies
 
-- Massive.com (primary provider, CON-001), via `data/MassiveProvider`
-- Yahoo (fallback provider), via `data/YahooProvider`
+- Massive.com (primary provider, CON-001), via `data/providers/MassiveProvider.py`
+- Yahoo (fallback provider, planned/not yet implemented), via `data/providers/YahooProvider.py`
 
 This service has no dependency on any other internal service, it is a leaf node in the service graph.
 
