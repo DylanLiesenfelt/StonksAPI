@@ -1,19 +1,23 @@
-from datetime import datetime
-
-from market_data.models.schemas import PriceBar
+from market_data.data.providers.schemas import PriceBar
 from market_data.service.indicators.schemas import IndicatorResult
 from market_data.service.indicators.strategies import ATR
+
+DAY_MS = 86400000
+BASE_TS_MS = 1672531200000  # 2023-01-01T00:00:00Z, fixed so tests are deterministic
+
+
+def ts_for_day(day):
+    return BASE_TS_MS + (day - 1) * DAY_MS
 
 
 def make_bar(day, high, low, close):
     return PriceBar(
-        ticker="AAPL",
         open=close,
         high=high,
         low=low,
         close=close,
         volume=1000,
-        ts=datetime(2023, 1, day)
+        ts=ts_for_day(day)
     )
 
 
@@ -26,11 +30,11 @@ bars = [
     (15, 11, 13),
     (14, 12, 13),
 ]
-history = [make_bar(day, high, low, close) for day, (high, low, close) in enumerate(bars, start=1)]
+history = {ts_for_day(day): make_bar(day, high, low, close) for day, (high, low, close) in enumerate(bars, start=1)}
 
 
 def test_ATR_calculate_computes_wilder_smoothed_average():
-    result = ATR().calculate(history, 2, request_id)
+    result = ATR().calculate(history, 2, "AAPL", request_id)
     # true ranges (using prev bar's close):
     # day 2: max(13-9, |13-9|, |9-9|)   = 4
     # day 3: max(12-10, |12-11|, |10-11|) = 2
@@ -40,23 +44,24 @@ def test_ATR_calculate_computes_wilder_smoothed_average():
     # day 4 = ((3.0 * (2-1)) + 4) / 2 = 3.5
     # day 5 = ((3.5 * (2-1)) + 2) / 2 = 2.75
     expected = {
-        datetime(2023, 1, 3): 3.0,
-        datetime(2023, 1, 4): 3.5,
-        datetime(2023, 1, 5): 2.75,
+        ts_for_day(3): 3.0,
+        ts_for_day(4): 3.5,
+        ts_for_day(5): 2.75,
     }
     assert result.result == expected
 
 
 def test_ATR_calculate_drops_incomplete_windows():
-    result = ATR().calculate(history, 2, request_id)
+    result = ATR().calculate(history, 2, "AAPL", request_id)
     # ATR needs an extra prior bar for the first true range, so it yields
     # one fewer point than SMA/EMA/VWAP would for the same window
     assert len(result.result) == len(history) - 2
 
 
 def test_ATR_calculate_returns_indicator_result():
-    result = ATR().calculate(history, 2, request_id)
+    result = ATR().calculate(history, 2, "AAPL", request_id)
     assert isinstance(result, IndicatorResult)
     assert result.request_id == request_id
+    assert result.ticker == "AAPL"
     assert result.indicator_method == "ATR"
-    assert isinstance(result.completed, int)
+    assert isinstance(result.completed_at, int)

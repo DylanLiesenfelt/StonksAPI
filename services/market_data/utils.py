@@ -1,9 +1,5 @@
-from datetime import datetime, timezone
+from time import time_ns as ns
 
-
-def dt_to_unixMS(dt: datetime) -> int:
-    return int(dt.timestamp() * 1000)
-
-
-def unixMS_to_dt(ms: int) -> datetime:
-    return datetime.fromtimestamp(ms / 1000, timezone.utc)
+# Date/Time stuff
+def ms_now() -> int:
+    return ns() // 1000000
