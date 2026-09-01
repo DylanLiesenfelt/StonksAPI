@@ -1,75 +1,89 @@
-import pandas as pd
-from market_data.utils import ms_now
+from collections import deque
 
-from market_data.data.providers.schemas import PriceBar
+import pandas as pd
+
+from market_data.data.providers.schemas import PriceBarsResult, PriceBar
 from market_data.service.indicators.strategy import IndicatorStrategy
-from market_data.service.indicators.schemas import IndicatorResult
+from market_data.service.indicators.schemas import IndicatorRequest, IndicatorResult
 
 
 class SMA(IndicatorStrategy):
-    def calculate(self, history: dict[int, PriceBar], window: int, ticker: str, request_id: dict):
-        decomped_data = {ts: bar.close for ts, bar in sorted(history.items())}
-        s = pd.Series(decomped_data)
-        d = s.rolling(window=window).mean()
+    def calculate(self, data:PriceBarsResult, request: IndicatorRequest ) -> IndicatorResult:
+        bars = {ts : bar.close for ts, bar in  data.data.items()}
+
+        s = pd.Series(bars)
+        d = s.rolling(window=request.period).mean()
         d = d.dropna().to_dict()
 
-        return IndicatorResult(request_id=request_id, ticker=ticker, result=d, indicator_method="SMA", completed_at=ms_now())
+        return IndicatorResult(
+            request_id=request.request_id,
+            ticker=request.ticker,
+            result=d
+        )
 
 
 class EMA(IndicatorStrategy):
-    def get_sma(self, history: dict[int, PriceBar], window: int):
-        decomped_data = {ts: bar.close for ts, bar in sorted(history.items())}
-        s = pd.Series(decomped_data)
-        d = s.rolling(window=window).mean()
-        d = list(d.dropna().to_dict().items())
-        return d[0]
-
     def get_multipler(self, periods: int) -> float:
         return 2 / (periods + 1)
 
     def get_ema(self, curr_price: float, prev_ema: float, mult: float):
         return (curr_price * mult) + (prev_ema * (1 - mult))
 
-    def calculate(self, history: dict[int, PriceBar], window: int, ticker: str, request_id: dict):
-        # get constants
+    def calculate(self, data:PriceBarsResult, request: IndicatorRequest ) -> IndicatorResult:
         result = {}
-        mult = self.get_multipler(window)
-        bars = sorted(history.items())  # [(ts, PriceBar), ...] chronological
+        mult = self.get_multipler(request.period)
+        seed_closes = deque(maxlen=request.period)
+        prev_ema = None
 
-        # seed with the sma at the first complete window
-        _, first_sma = self.get_sma(history, window)
-        seed_ts, _ = bars[window - 1]
-        result[seed_ts] = first_sma
+        for ts, bar in data.data.items():
+            if prev_ema is None:
+                seed_closes.append(bar.close)
+                if len(seed_closes) < request.period:
+                    continue
+                prev_ema = sum(seed_closes) / request.period
+            else:
+                prev_ema = self.get_ema(bar.close, prev_ema, mult)
 
-        for i in range(window, len(bars)):
-            ts, bar = bars[i]
-            prev_ts, _ = bars[i - 1]
-            result[ts] = self.get_ema(bar.close, result[prev_ts], mult)
+            result[ts] = prev_ema
 
-        return IndicatorResult(request_id=request_id, ticker=ticker, result=result, indicator_method="EMA", completed_at=ms_now())
+        return IndicatorResult(
+            request_id=request.request_id,
+            ticker=request.ticker,
+            result=result
+        )
 
 
 class VWAP(IndicatorStrategy):
     def get_typical_price(self, high: float, low: float, close: float):
         return (high + low + close) / 3
 
-    # get price * volume
-    def get_pv(self, high: float, low: float, close: float, vol: float):
+    def get_price_x_volume(self, high: float, low: float, close: float, vol: float):
         tp = self.get_typical_price(high, low, close)
         return tp * vol
 
-    def calculate(self, history: dict[int, PriceBar], window: int, ticker: str, request_id: dict):
-        sorted_bars = sorted(history.items())
-        pv_data = {ts: self.get_pv(bar.high, bar.low, bar.close, bar.volume) for ts, bar in sorted_bars}
-        vol_data = {ts: bar.volume for ts, bar in sorted_bars}
+    def calculate(self, data:PriceBarsResult, request: IndicatorRequest ) -> IndicatorResult:
+        bars = data.data.items()
+        pv_data = {
+            ts : self.get_price_x_volume(
+                bar.high, 
+                bar.low,
+                bar.close,
+                bar.volume
+            ) for ts, bar in bars
+        }
+        vol_data = {ts : bar.volume for ts, bar in bars}
 
         pv = pd.Series(pv_data)
         vol = pd.Series(vol_data)
 
-        d = pv.rolling(window=window).sum() / vol.rolling(window=window).sum()
+        d = pv.rolling(window=request.period).sum() / vol.rolling(window=request.period).sum()
         d = d.dropna().to_dict()
 
-        return IndicatorResult(request_id=request_id, ticker=ticker, result=d, indicator_method="VWAP", completed_at=ms_now())
+        return IndicatorResult(
+            request_id=request.request_id,
+            ticker=request.ticker,
+            result=d
+        )
 
 
 class ATR(IndicatorStrategy):
@@ -84,24 +98,35 @@ class ATR(IndicatorStrategy):
 
         return max([hl, hc, lc])
 
-    def get_atr(self, prev_atr, curr_tr, window):
-        return ((prev_atr * (window - 1)) + curr_tr) / window
+    def get_atr(self, prev_atr, curr_tr, period):
+        return ((prev_atr * (period - 1)) + curr_tr) / period
 
-    def calculate(self, history: dict[int, PriceBar], window: int, ticker: str, request_id: dict):
-        bars = sorted(history.items())  # [(ts, PriceBar), ...] chronological
-
-        # get first atr, simple average of the first `window` true range values
-        first_atr = sum(self.get_true_range(bars[i][1], bars[i - 1][1]) for i in range(1, window + 1)) / window
-
+    def calculate(self, data:PriceBarsResult, request: IndicatorRequest ) -> IndicatorResult:
         results = {}
-        results[bars[window][0]] = first_atr
-        prev_atr = first_atr
+        prev_bar = None
+        seed_trs = deque(maxlen=request.period)
+        prev_atr = None
 
-        for i in range(window + 1, len(bars)):
-            tr = self.get_true_range(bars[i][1], bars[i - 1][1])
-            atr = self.get_atr(prev_atr, tr, window)
+        for ts, bar in data.data.items():
+            if prev_bar is None:
+                prev_bar = bar
+                continue
 
-            results[bars[i][0]] = atr
-            prev_atr = atr
+            tr = self.get_true_range(bar, prev_bar)
+            prev_bar = bar
 
-        return IndicatorResult(request_id=request_id, ticker=ticker, result=results, indicator_method="ATR", completed_at=ms_now())
+            if prev_atr is None:
+                seed_trs.append(tr)
+                if len(seed_trs) < request.period:
+                    continue
+                prev_atr = sum(seed_trs) / request.period
+            else:
+                prev_atr = self.get_atr(prev_atr, tr, request.period)
+
+            results[ts] = prev_atr
+
+        return IndicatorResult(
+            request_id=request.request_id,
+            ticker=request.ticker,
+            result=results
+        )

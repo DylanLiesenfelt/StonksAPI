@@ -1,5 +1,5 @@
-from market_data.data.providers.schemas import PriceBar
-from market_data.service.indicators.schemas import IndicatorResult
+from market_data.data.providers.schemas import PriceBar, PriceBarsResult
+from market_data.service.indicators.schemas import IndicatorRequest, IndicatorResult
 from market_data.service.indicators.strategies import SMA
 
 DAY_MS = 86400000
@@ -25,9 +25,22 @@ request_id = {"request_id": "3c498ntp398fjxn", "global_id": "nyr4cq90pxyf"}
 
 history = {ts_for_day(day): make_bar(day, close) for day, close in enumerate([1.0, 2.0, 3.0, 4.0, 5.0], start=1)}
 
+data = PriceBarsResult(request_id=request_id, ticker="AAPL", data=history)
+
+request = IndicatorRequest(
+    request_id=request_id,
+    indicator_method="SMA",
+    ticker="AAPL",
+    period=3,
+    timeframe="day",
+    multiplier=1,
+    start=ts_for_day(1),
+    end=ts_for_day(5),
+)
+
 
 def test_SMA_calculate_computes_rolling_mean():
-    result = SMA().calculate(history, 3, "AAPL", request_id)
+    result = SMA().calculate(data, request)
     expected = {
         ts_for_day(3): 2.0,
         ts_for_day(4): 3.0,
@@ -37,14 +50,12 @@ def test_SMA_calculate_computes_rolling_mean():
 
 
 def test_SMA_calculate_drops_incomplete_windows():
-    result = SMA().calculate(history, 3, "AAPL", request_id)
+    result = SMA().calculate(data, request)
     assert len(result.result) == len(history) - 3 + 1
 
 
 def test_SMA_calculate_returns_indicator_result():
-    result = SMA().calculate(history, 3, "AAPL", request_id)
+    result = SMA().calculate(data, request)
     assert isinstance(result, IndicatorResult)
     assert result.request_id == request_id
     assert result.ticker == "AAPL"
-    assert result.indicator_method == "SMA"
-    assert isinstance(result.completed_at, int)

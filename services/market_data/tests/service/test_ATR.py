@@ -1,5 +1,5 @@
-from market_data.data.providers.schemas import PriceBar
-from market_data.service.indicators.schemas import IndicatorResult
+from market_data.data.providers.schemas import PriceBar, PriceBarsResult
+from market_data.service.indicators.schemas import IndicatorRequest, IndicatorResult
 from market_data.service.indicators.strategies import ATR
 
 DAY_MS = 86400000
@@ -32,9 +32,22 @@ bars = [
 ]
 history = {ts_for_day(day): make_bar(day, high, low, close) for day, (high, low, close) in enumerate(bars, start=1)}
 
+data = PriceBarsResult(request_id=request_id, ticker="AAPL", data=history)
+
+request = IndicatorRequest(
+    request_id=request_id,
+    indicator_method="ATR",
+    ticker="AAPL",
+    period=2,
+    timeframe="day",
+    multiplier=1,
+    start=ts_for_day(1),
+    end=ts_for_day(5),
+)
+
 
 def test_ATR_calculate_computes_wilder_smoothed_average():
-    result = ATR().calculate(history, 2, "AAPL", request_id)
+    result = ATR().calculate(data, request)
     # true ranges (using prev bar's close):
     # day 2: max(13-9, |13-9|, |9-9|)   = 4
     # day 3: max(12-10, |12-11|, |10-11|) = 2
@@ -52,16 +65,14 @@ def test_ATR_calculate_computes_wilder_smoothed_average():
 
 
 def test_ATR_calculate_drops_incomplete_windows():
-    result = ATR().calculate(history, 2, "AAPL", request_id)
+    result = ATR().calculate(data, request)
     # ATR needs an extra prior bar for the first true range, so it yields
-    # one fewer point than SMA/EMA/VWAP would for the same window
+    # one fewer point than SMA/EMA/VWAP would for the same period
     assert len(result.result) == len(history) - 2
 
 
 def test_ATR_calculate_returns_indicator_result():
-    result = ATR().calculate(history, 2, "AAPL", request_id)
+    result = ATR().calculate(data, request)
     assert isinstance(result, IndicatorResult)
     assert result.request_id == request_id
     assert result.ticker == "AAPL"
-    assert result.indicator_method == "ATR"
-    assert isinstance(result.completed_at, int)
