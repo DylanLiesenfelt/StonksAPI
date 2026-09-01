@@ -1,8 +1,6 @@
-import os
-from dotenv import load_dotenv
 from massive import RESTClient
 
-from market_data.utils import ms_now
+from market_data.config import MASSIVE_KEY
 from market_data.data.providers.Provider import Provider
 from market_data.data.providers.schemas import (
     PriceBarsRequest,
@@ -15,12 +13,10 @@ from market_data.data.providers.schemas import (
     TickerInfoResult,
 )
 
-load_dotenv()
-
 
 class MassiveProvider(Provider):
     def __init__(self):
-        self.key = os.getenv("MASSIVE_KEY")
+        self.key = MASSIVE_KEY
         self.client = RESTClient(self.key)
 
     def get_quotes(self, request: QuotesRequest) -> QuotesResult:
@@ -32,8 +28,7 @@ class MassiveProvider(Provider):
         return QuotesResult(
             request_id=request.request_id,
             tickers=request.tickers,
-            data=data,
-            completed_at=ms_now()
+            data=data
         )
 
     def get_ticker_info(self, request: TickerInfoRequest) -> TickerInfoResult:
@@ -45,14 +40,13 @@ class MassiveProvider(Provider):
             company_name=res.name,
             hq_location={"city": res.address.city, "state": res.address.state},
             logo_url=res.branding.logo_url,
-            market_cap=res.market_cap,
-            completed_at=ms_now()
+            market_cap=res.market_cap
         )
 
     def get_ticker_bars(self, request: PriceBarsRequest) -> PriceBarsResult:
         aggs = self.client.list_aggs(
             request.ticker,
-            request.window,
+            request.multiplier,
             request.timeframe,
             request.start,
             request.end,
@@ -76,8 +70,7 @@ class MassiveProvider(Provider):
         return PriceBarsResult(
             request_id=request.request_id,
             ticker=request.ticker,
-            data=data,
-            completed_at=ms_now()
+            data=data
         )
 
 MASSIVE = MassiveProvider()

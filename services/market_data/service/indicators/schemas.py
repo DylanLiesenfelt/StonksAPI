@@ -1,27 +1,17 @@
 from pydantic import BaseModel
-from market_data.data.providers.schemas import PriceBar
-
-class IndicatorData(BaseModel):
-    request_id: dict
-    ticker: str
-    price_history: dict[int, PriceBar]  # ms timestamp : PriceBar
-    window: int
-
 
 class IndicatorResult(BaseModel):
-    request_id: dict
+    request_id: dict[str,str]
     ticker: str
     result: dict
-    indicator_method: str
-    completed_at: int
 
 
 class IndicatorRequest(BaseModel):
-    request_id: dict
+    request_id: dict[str,str]
+    indicator_method: str
     ticker: str
-    period: int
+    period: int # number of bars to roll over for the indicator calculation, e.g. 20-period SMA
     timeframe: str
-    window: int
+    multiplier: int # size of the underlying price bar, forwarded to PriceBarsRequest.multiplier
     start: int
     end: int
-    received_at: int

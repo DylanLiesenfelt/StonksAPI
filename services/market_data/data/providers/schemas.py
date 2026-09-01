@@ -4,11 +4,10 @@ from pydantic import BaseModel
 class PriceBarsRequest(BaseModel):
     request_id: dict[str,str] # global_id : UUID, request_id : UUID
     ticker: str
-    window: int # size of the bar, 1,5,15 etc...
+    multiplier: int # size of the bar, 1,5,15 etc...
     timeframe: str # min, day, etc...
     start: int
-    end: int
-    received_at: int
+    end:  int
 
 
 class PriceBar(BaseModel):
@@ -16,7 +15,7 @@ class PriceBar(BaseModel):
     high: float
     low: float
     close: float
-    volume: int
+    volume: float
     ts: int 
 
 
@@ -24,7 +23,6 @@ class PriceBarsResult(BaseModel):
     request_id: dict[str,str]
     ticker: str
     data: dict[int, PriceBar] # ms timestamp: PriceBar
-    completed_at: int
 
 
 # Quote data comes from:
@@ -32,7 +30,6 @@ class PriceBarsResult(BaseModel):
 class QuotesRequest(BaseModel):
     request_id: dict[str,str]
     tickers: list[str]
-    received_at: int
 
 
 class Quote(BaseModel):
@@ -44,7 +41,6 @@ class QuotesResult(BaseModel):
     request_id: dict[str,str]
     tickers: list[str]
     data: dict[str, Quote] # ticker : Quote
-    completed_at: int
     
 
 # Ticker Info data comes from:
@@ -53,7 +49,6 @@ class QuotesResult(BaseModel):
 class TickerInfoRequest(BaseModel):
     request_id : dict[str,str]
     ticker: str
-    received_at: int
 
 
 class TickerInfoResult(BaseModel):
@@ -63,6 +58,5 @@ class TickerInfoResult(BaseModel):
     hq_location: dict[str, str]  # {"city": ..., "state": ...}
     logo_url: str
     market_cap: float
-    completed_at: int
 
 

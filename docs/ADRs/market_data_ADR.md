@@ -121,3 +121,51 @@ Date: 28 AUG 2026
 - `data/providers/schemas.py` has more classes (eight) than `models/schemas.py` did (three), one Request/Result pair per method plus two point-level `Object` classes, but each one is single-purpose and none of them do double duty the way the old flat models did.
 - Anything that previously read `PriceBar.ticker`/`Quote.ticker` needs the ticker from the surrounding `Result` (or, inside a strategy, from the new `ticker` parameter) instead. `service/indicators/strategies.py` and every strategy test needed updating for this.
 - `IndicatorData.price_history` changed from `list[PriceBar]` to `dict[int, PriceBar]` to match `PriceBarsResult.data`'s shape, so `Indicator` can pass a provider result's `data` straight through without reshaping it first.
+
+# 005 Period Drives Indicator Lookback, Multiplier Drives Bar Size, Timing Metadata Stays Off the DTOs
+
+Date: 01 SEP 2026
+
+## Context
+
+[[001]] described `window` as the indicator's own sliding-window length, and `period` as something the calculation was agnostic to, just how wide the underlying data set was. In practice `period` was added to the design two days later (the router signature `get_indicator(ticker, indicator, end, period, timeframe)`) and never got wired to anything, while `window` ended up meaning two different things in two different schemas: `service/indicators/schemas.py`'s `IndicatorRequest.window` (the rolling calculation length every `SMA`/`EMA`/`VWAP`/`ATR` strategy actually used) and `data/providers/schemas.py`'s `PriceBarsRequest.window` (the bar size/multiplier forwarded straight into `MassiveProvider`'s `list_aggs` call, per the field's own comment: "size of the bar, 1,5,15 etc..."). `MarketDataService.get_indicator()` forwarded `IndicatorRequest.window` into `PriceBarsRequest.window` unchanged, so one field silently did double duty as both "how many bars to roll over" and "how big a bar to fetch."
+
+Separately, while auditing the same files: `data/providers/MassiveProvider.py`'s method was named `get_price_bars` even though the `Provider` interface in `MARKET_DATA_DESIGN.md` and [[004]] both call it `get_ticker_bars`, a naming drift, not a deliberate rename. And the indicator pipeline couldn't run end to end at all: `Indicator.make_indicator()` referenced a nonexistent `self.re` instead of `self.request`; `MarketDataService.get_indicator()` passed the strategy *class* (e.g. `SMA`) into `Indicator` instead of an instance; `EMA`/`ATR` built a `{timestamp: close}` dict and then indexed it positionally as if it were a list of `(ts, bar)` tuples; and a leftover scratch block at the bottom of `MarketDataService.py` built an `IndicatorRequest` missing required fields, raising a `ValidationError` on import.
+
+Finally, revisiting [[003]]/[[004]]: those describe every `*Request` carrying `received_at` and every `*Result` carrying `completed_at` (`IndicatorResult` also `indicator_method`), but none of that ever landed in the actual schemas, and no caller needs it there. Request/response timing is an interface concern, per `ARCHITECTURE.md` the API Gateway is the sole public-facing service, not something every internal DTO passed between this service's own layers should carry.
+
+## Decision
+
+- `window` is retired as a field name. `PriceBarsRequest` and `IndicatorRequest` use `multiplier: int` for bar size instead, matching Polygon's own vocabulary and what `MassiveProvider.get_ticker_bars` already passes it as.
+- `IndicatorRequest.period` is now the field every strategy reads for its rolling calculation length (`SMA`/`VWAP`'s `pd.Series.rolling(window=request.period)`, `EMA`'s smoothing multiplier and seed length, `ATR`'s seed/smoothing length). It was dead code before this.
+- `data/providers/MassiveProvider.py`, `Provider.py`, and `MarketDataService.py` rename `get_price_bars` to `get_ticker_bars`, aligning the code with the name the design doc and [[004]] already used.
+- `Indicator.make_indicator()` uses `self.request`, not `self.re`. `MarketDataService.get_indicator()` instantiates the registered strategy (`strategy()`) instead of passing the class. `EMA`/`ATR` no longer build a positionally-indexed dict; both do a single pass over `data.data.items()` (already ordered) with a running accumulator instead. The scratch `IndicatorRequest` block at the bottom of `MarketDataService.py` is deleted. `IndicatorStrategy.calculate()`'s abstract signature now matches every concrete strategy: `calculate(self, data: PriceBarsResult, request: IndicatorRequest) -> IndicatorResult`.
+- `received_at`/`completed_at`/`indicator_method` are not added to any DTO in `data/providers/schemas.py` or `service/indicators/schemas.py`, superseding that part of [[003]]/[[004]]. Request/response timing, if needed, belongs at the API Gateway layer.
+- `IndicatorData` ([[001]], [[004]]) is deleted, it was never constructed or consumed anywhere, just carried the same stale `window` field as everything else.
+
+## Consequences
+
+- `get_indicator()` can actually run end to end for the first time since the strategy-pattern refactor in [[001]].
+- Callers now have two separate knobs (`period`, `multiplier`) instead of one overloaded `window`, but each knob means one thing everywhere it appears.
+- `EMA`/`ATR` are single-pass instead of doing repeated positional lookups into a mis-shaped container, and no longer risk the `KeyError`/`TypeError` the old indexing was one bad input away from.
+- Every provider/indicator DTO is exactly as wide as what its constructor and consumers actually use, no fields nothing sets or reads.
+- Tests written against the [[003]]/[[004]] shape (`result.completed_at`, `result.indicator_method`) had those assertions removed rather than the schema grown to match; `tests/service/test_{SMA,EMA,ATR,VWAP}.py`, `tests/data/providers/test_MassiveProvider.py`, and `tests/data/providers/test_TickerInfoResult.py` were all updated.
+
+# 006 Drop MarketDataCache
+
+Date: 01 SEP 2026
+
+## Context
+
+`data/cache/MarketDataCache.py` and `data/cache/schemas.py` implemented an in-memory, TTL-based cache (`MarketDataCache`, `CacheEntry`) keyed by ticker and result type, meant to sit between `MarketDataService` and `Provider` so repeated lookups for the same ticker within the TTL window (default 180s) wouldn't hit Massive.com again. `MarketDataService` never actually wired it in, the import and `self.cache` assignment were commented out, and this service's actual traffic profile doesn't call for it: it's low volume, and callers want the freshest available data more than they want to avoid a redundant provider call. A staleness-window cache trades exactly the thing this service is supposed to guarantee, current data, for a savings this service doesn't need yet.
+
+## Decision
+
+- Deleted `data/cache/MarketDataCache.py`, `data/cache/schemas.py`, and `tests/data/cache/test_MarketDataCache.py`; removed the now-empty `data/cache/` directories.
+- Removed the commented-out cache import/attribute from `MarketDataService.py`.
+- `MARKET_DATA_DESIGN.md` no longer shows `MarketDataCache`/`CacheEntry` in the class diagram or either sequence diagram, and the Purpose/Scope, Data Model/Persistence, Error Handling, and Configuration sections no longer reference caching or a TTL.
+
+## Consequences
+
+- Every `get_quotes`/`get_ticker_info`/`get_ticker_bars` call now always reaches `MassiveProvider`, no staleness/hit-miss logic to reason about or keep correct.
+- If traffic or Massive.com rate limits later make redundant calls expensive, caching can be reintroduced, this ADR doesn't rule that out, it just says the complexity isn't earned yet.

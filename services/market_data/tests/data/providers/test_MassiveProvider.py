@@ -21,8 +21,8 @@ class FakeClient:
         self.calls.append(("get_ticker_details", ticker))
         return self._details
 
-    def list_aggs(self, ticker, window, timeframe, start, end, adjusted=None, sort=None, limit=None):
-        self.calls.append(("list_aggs", ticker, window, timeframe, start, end, adjusted, sort, limit))
+    def list_aggs(self, ticker, multiplier, timeframe, start, end, adjusted=None, sort=None, limit=None):
+        self.calls.append(("list_aggs", ticker, multiplier, timeframe, start, end, adjusted, sort, limit))
         return iter(self._aggs)
 
 
@@ -42,13 +42,12 @@ def test_get_quotes_maps_snapshot_into_quotes_result():
     client = FakeClient(snapshot=snapshot)
     provider = make_provider(client)
 
-    request = QuotesRequest(request_id=request_id, tickers=["AAPL"], received_at=1_700_000_000_000)
+    request = QuotesRequest(request_id=request_id, tickers=["AAPL"])
     result = provider.get_quotes(request)
 
     assert result.tickers == ["AAPL"]
     assert result.data["AAPL"].price == 189.5
     assert result.data["AAPL"].ts == 1_700_000_000_000
-    assert isinstance(result.completed_at, int)
     assert client.calls == [("get_snapshot_ticker", "stocks", "AAPL")]
 
 
@@ -62,7 +61,7 @@ def test_get_ticker_info_maps_details_into_ticker_info_result():
     client = FakeClient(details=details)
     provider = make_provider(client)
 
-    request = TickerInfoRequest(request_id=request_id, ticker="AAPL", received_at=1_700_000_000_000)
+    request = TickerInfoRequest(request_id=request_id, ticker="AAPL")
     result = provider.get_ticker_info(request)
 
     assert result.ticker == "AAPL"
@@ -70,7 +69,6 @@ def test_get_ticker_info_maps_details_into_ticker_info_result():
     assert result.hq_location == {"city": "Cupertino", "state": "CA"}
     assert result.logo_url == "https://example.com/logo.svg"
     assert result.market_cap == 3_000_000_000_000.0
-    assert isinstance(result.completed_at, int)
     assert client.calls == [("get_ticker_details", "AAPL")]
 
 
@@ -85,11 +83,10 @@ def test_get_ticker_bars_maps_aggs_into_price_bars_result():
     request = PriceBarsRequest(
         request_id=request_id,
         ticker="AAPL",
-        window=1,
+        multiplier=1,
         timeframe="minute",
         start=1_700_000_000_000,
         end=1_700_000_100_000,
-        received_at=1_700_000_000_000,
     )
     result = provider.get_ticker_bars(request)
 
@@ -97,7 +94,6 @@ def test_get_ticker_bars_maps_aggs_into_price_bars_result():
     assert set(result.data.keys()) == {1_700_000_000_000, 1_700_000_060_000}
     assert result.data[1_700_000_000_000].close == 1.5
     assert result.data[1_700_000_060_000].volume == 200
-    assert isinstance(result.completed_at, int)
     assert client.calls == [
         ("list_aggs", "AAPL", 1, "minute", 1_700_000_000_000, 1_700_000_100_000, True, "asc", 32000)
     ]

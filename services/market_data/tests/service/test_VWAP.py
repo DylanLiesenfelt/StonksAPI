@@ -1,5 +1,5 @@
-from market_data.data.providers.schemas import PriceBar
-from market_data.service.indicators.schemas import IndicatorResult
+from market_data.data.providers.schemas import PriceBar, PriceBarsResult
+from market_data.service.indicators.schemas import IndicatorRequest, IndicatorResult
 from market_data.service.indicators.strategies import VWAP
 
 DAY_MS = 86400000
@@ -26,9 +26,22 @@ request_id = {"request_id": "3c498ntp398fjxn", "global_id": "nyr4cq90pxyf"}
 bars = [(1.0, 100), (2.0, 100), (3.0, 200), (4.0, 100), (5.0, 100)]
 history = {ts_for_day(day): make_bar(day, close, volume) for day, (close, volume) in enumerate(bars, start=1)}
 
+data = PriceBarsResult(request_id=request_id, ticker="AAPL", data=history)
+
+request = IndicatorRequest(
+    request_id=request_id,
+    indicator_method="VWAP",
+    ticker="AAPL",
+    period=3,
+    timeframe="day",
+    multiplier=1,
+    start=ts_for_day(1),
+    end=ts_for_day(5),
+)
+
 
 def test_VWAP_calculate_computes_volume_weighted_average():
-    result = VWAP().calculate(history, 3, "AAPL", request_id)
+    result = VWAP().calculate(data, request)
     # window sums of (typical_price * volume) / volume:
     # day 3: (1*100 + 2*100 + 3*200) / (100+100+200) = 900 / 400 = 2.25
     # day 4: (2*100 + 3*200 + 4*100) / (100+200+100) = 1200 / 400 = 3.0
@@ -42,14 +55,12 @@ def test_VWAP_calculate_computes_volume_weighted_average():
 
 
 def test_VWAP_calculate_drops_incomplete_windows():
-    result = VWAP().calculate(history, 3, "AAPL", request_id)
+    result = VWAP().calculate(data, request)
     assert len(result.result) == len(history) - 3 + 1
 
 
 def test_VWAP_calculate_returns_indicator_result():
-    result = VWAP().calculate(history, 3, "AAPL", request_id)
+    result = VWAP().calculate(data, request)
     assert isinstance(result, IndicatorResult)
     assert result.request_id == request_id
     assert result.ticker == "AAPL"
-    assert result.indicator_method == "VWAP"
-    assert isinstance(result.completed_at, int)
